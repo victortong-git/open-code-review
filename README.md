@@ -87,7 +87,7 @@ Setting up AIQ Toolkit may need some technical knowledges. If you have problem s
 This file is too large to host in my GitHub. So, I cannot post the file here.
 You can download the packaged file from 
 [open-code-review_2025-05-21_full_img.tgz](https://3c-kingdom.com/opencodereview/tgz/open-code-review_2025-05-21_full_img.tgz) (~630MB)
-This package contains configured components. Basically, you just need to edit .env with the Nvidia and OpenAI API key.
+This packaged file contains configured components. Basically, you just need to edit .env with the Nvidia and OpenAI API key.
 Then, run restart.sh to start the docker.
 
 # How to Setup the Environment (Video)

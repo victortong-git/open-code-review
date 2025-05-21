@@ -9,8 +9,8 @@ The OpenCodeReview application utilizes a modern, containerized architecture wit
 - **Frontend**: React.js - Provides the interactive user interface
 - **Backend**: Node.js with Express - Handles API requests and business logic
 - **Database**: PostgreSQL with PG Vector support - Stores application data with vector capabilities
-- **AI Engine**: Nvidia AIQ Toolkit - Powers code analysis and review features
-- **AI Interface**: Nvidia AIQ Toolkit UI - Provides visualization for AI operations
+- **AIQ Toolkit**: Nvidia AIQ Toolkit - Powers code analysis and review features
+- **AIQ Toolkit-UI**: Nvidia AIQ Toolkit UI - Provides visualization for AI operations
 - **Deployment**: Docker - Ensures consistent environment across deployments
 
 ## System Architecture
@@ -73,8 +73,8 @@ All components run in isolated Docker containers for maintainability and scalabi
    ```bash
    tar -xvzf <filename>.tgz
    ```
-   a folder named `open-code-review` will be created.
-   cd into the `open-code-review` folder.
+   a folder named `opencode-review` will be created.
+   cd into the `opencode-review` folder.
 3. Edit .env file to set your API keys. NVIDIA_API_KEY and OPENAI_API_KEY are required.
 4. Execute the deployment script: `./restart.sh`. docker login is required to run this script for docker image nvcr.io/nvidia/base/ubuntu.
 5. Access the application at `http://localhost:5174`
@@ -86,6 +86,10 @@ All components run in isolated Docker containers for maintainability and scalabi
 # Short Demo Video
 [![Demo Video](https://img.youtube.com/vi/W-IZSS-T_6U/0.jpg)](https://youtu.be/W-IZSS-T_6U)
 
+## OpenCodeReview Home and Blog Pages
+- [OpenCodeReview HomePage](http://3c-kingdom.com/opencodereview/)
+- [OpenCodeReview Blog Page](http://3c-kingdom.com/opencodereview/blog.html)
+
 ### Important Notes
 - This is a proof-of-concept implementation intended for local development environments
 - The application has been tested on CentOS 9 with Docker
@@ -93,3 +97,5 @@ All components run in isolated Docker containers for maintainability and scalabi
 - AI Code Analysis takes time and may require multiple attempts to get a good result. It takees about 5-10 minutes to analyze a file in this POC build. Performance tuning have not been done yet in this POC build.
 - For the POC demo reason, duplicated findings wiil be added to the database when you assess the same file multiple times. This is not the case in the post-hackathon version. The post-hackathon version will be able to detect the duplicated findings by using duplicate finding detection AI agent and tool.
 - Known Bug: Incorrect finding level for file which does not have any security issues. The finding level should be "No Security Issues" but it is "Low" in the POC build. This will be fixed in the post-hackathon version.
+
+

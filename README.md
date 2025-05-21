@@ -108,5 +108,6 @@ Then, run restart.sh to start the docker.
 - For the POC demo reason, duplicated findings wiil be added to the database when you assess the same file multiple times. This is not the case in the post-hackathon version. The post-hackathon version will be able to detect the duplicated findings by using duplicate finding detection AI agent and tool.
 - Known Bug: Incorrect finding level for file which does not have any security issues. The finding level should be "No Security Issues" but it is "Low" in the POC build. This will be fixed in the post-hackathon version.
 - Apologies for not having enough time to setup a better source control repo for this Nvidia Hackathon Build.
+- Please read my blog post for post-hackathon release and the features roadmap.
 
 

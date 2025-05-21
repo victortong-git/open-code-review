@@ -1,8 +1,8 @@
-# Open Code Review - Technical Documentation
+# OpenCodeReview - Technical Documentation
 
 ## Architecture Overview
 
-The Open Code Reviewer application utilizes a modern, containerized architecture with separate components for frontend, backend, AI processing, and data storage.
+The OpenCodeReview application utilizes a modern, containerized architecture with separate components for frontend, backend, AI processing, and data storage.
 
 ## Technology Stack
 

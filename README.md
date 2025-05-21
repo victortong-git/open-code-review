@@ -73,11 +73,13 @@ All components run in isolated Docker containers for maintainability and scalabi
    ```bash
    tar -xvzf <filename>.tgz
    ```
+   Make sure download both part 1 and part 2 files.
    a folder named `opencode-review` will be created.
    cd into the `opencode-review` folder.
-3. Edit .env file to set your API keys. NVIDIA_API_KEY and OPENAI_API_KEY are required.
-4. Execute the deployment script: `./restart.sh`. docker login is required to run this script for docker image nvcr.io/nvidia/base/ubuntu.
-5. Access the application at `http://localhost:5174`
+   run update_aiqtoolkit.sh. This is used to setup aiqtoolkit.
+4. Edit .env file to set your API keys. NVIDIA_API_KEY and OPENAI_API_KEY are required.
+5. Execute the deployment script: `./restart.sh`. docker login is required to run this script for docker image nvcr.io/nvidia/base/ubuntu.
+6. Access the application at `http://localhost:5174`
 
 
 # How to Setup the Environment (Video)

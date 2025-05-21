@@ -1,4 +1,4 @@
-# Open Code Reviewer - Technical Documentation
+# Open Code Review - Technical Documentation
 
 ## Architecture Overview
 

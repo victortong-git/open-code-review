@@ -74,6 +74,8 @@ All components run in isolated Docker containers for maintainability and scalabi
    tar -xvzf <filename>.tgz
    ```
    Make sure download both part 1 and part 2 files.
+   Part 1 is aiqtoolkit and aiqtoolkit-ui.
+   Part 2 is the OpenCodeReview Platform Stack.
    a folder named `opencode-review` will be created.
    cd into the `opencode-review` folder.
    run update_aiqtoolkit.sh. This is used to setup aiqtoolkit.

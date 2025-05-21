@@ -81,6 +81,8 @@ All components run in isolated Docker containers for maintainability and scalabi
 5. Execute the deployment script: `./restart.sh`. docker login is required to run this script for docker image nvcr.io/nvidia/base/ubuntu.
 6. Access the application at `http://localhost:5174`
 
+Setting up AIQ Toolkit may need some technical knowledges. If you have problem setting it up, please contact me to get another full package file.
+This file is too large to host in my GitHub. So, I cannot post the file here.
 
 # How to Setup the Environment (Video)
 [![Setup Video](https://img.youtube.com/vi/wxGG2Ra0ljI/0.jpg)](https://youtu.be/wxGG2Ra0ljI)

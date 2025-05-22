@@ -114,6 +114,7 @@ Then, run restart.sh to start the docker.
 - For the POC demo reason, duplicated findings wiil be added to the database when you assess the same file multiple times. This is not the case in the post-hackathon version. The post-hackathon version will be able to detect the duplicated findings by using duplicate finding detection AI agent and tool.
 - Known Bug: Incorrect finding level for file which does not have any security issues. The finding level should be "No Security Issues" but it is "Low" in the POC build. This will be fixed in the post-hackathon version.
 - Apologies for not having enough time to setup a better source control repo for this NVIDIA Hackathon Build.
+- This POC build does not have enough time to having a better source code control and git submodule setup. Next build will set the aiqtoolkit as submodule and put code reviewe agent as package for AIQ Toolkit.
 - Please read my blog post for post-hackathon release and the features roadmap.
 - build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
 - This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025.

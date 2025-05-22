@@ -62,6 +62,7 @@ All components run in isolated Docker containers for maintainability and scalabi
 ## Recommended AI Models
 In this setup, I used OpenAI gpt-4o-mini for testing. This model works OK but not great.
 I recommend to use larger AI model like gpt-4o to test it or use https://build.nvidia.com/models, meta/llama-4-maverick-17b-128e-instruct, Llama 4 Maverick (17Bx128E).
+You can watch the setup video part 3 to see how to change the AI Model.
 This can help you to have a better code review results.
 
 ## Deployment Instructions

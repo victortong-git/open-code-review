@@ -59,6 +59,11 @@ All components run in isolated Docker containers for maintainability and scalabi
 └── .env                            # Environment configuration
 ```
 
+## Recommended AI Models
+In this setup, I used OpenAI gpt-4o-mini for testing. This model works OK but not great.
+I recommend to use larger AI model like gpt-4o to test it or use https://build.nvidia.com/models, Llama 4 Maverick (17Bx128E).
+This can help you to have a better code review results.
+
 ## Deployment Instructions
 
 ### Prerequisites
@@ -109,5 +114,5 @@ Then, run restart.sh to start the docker.
 - Known Bug: Incorrect finding level for file which does not have any security issues. The finding level should be "No Security Issues" but it is "Low" in the POC build. This will be fixed in the post-hackathon version.
 - Apologies for not having enough time to setup a better source control repo for this Nvidia Hackathon Build.
 - Please read my blog post for post-hackathon release and the features roadmap.
-
+- build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
 

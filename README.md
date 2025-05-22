@@ -9,8 +9,8 @@ The OpenCodeReview application utilizes a modern, containerized architecture wit
 - **Frontend**: React.js - Provides the interactive user interface
 - **Backend**: Node.js with Express - Handles API requests and business logic
 - **Database**: PostgreSQL with PG Vector support - Stores application data with vector capabilities
-- **AIQ Toolkit**: Nvidia AIQ Toolkit - Powers code analysis and review features
-- **AIQ Toolkit-UI**: Nvidia AIQ Toolkit UI - Provides visualization for AI operations
+- **AIQ Toolkit**: NVIDIA AIQ Toolkit - Powers code analysis and review features
+- **AIQ Toolkit-UI**: NVIDIA AIQ Toolkit UI - Provides visualization for AI operations
 - **Deployment**: Docker - Ensures consistent environment across deployments
 
 ## System Architecture
@@ -113,7 +113,7 @@ Then, run restart.sh to start the docker.
 - AI Code Analysis takes time and may require multiple attempts to get a good result. It takees about 5-10 minutes to analyze a file in this POC build. Performance tuning have not been done yet in this POC build.
 - For the POC demo reason, duplicated findings wiil be added to the database when you assess the same file multiple times. This is not the case in the post-hackathon version. The post-hackathon version will be able to detect the duplicated findings by using duplicate finding detection AI agent and tool.
 - Known Bug: Incorrect finding level for file which does not have any security issues. The finding level should be "No Security Issues" but it is "Low" in the POC build. This will be fixed in the post-hackathon version.
-- Apologies for not having enough time to setup a better source control repo for this Nvidia Hackathon Build.
+- Apologies for not having enough time to setup a better source control repo for this NVIDIA Hackathon Build.
 - Please read my blog post for post-hackathon release and the features roadmap.
 - build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
 - This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025.

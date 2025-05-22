@@ -116,4 +116,5 @@ Then, run restart.sh to start the docker.
 - Apologies for not having enough time to setup a better source control repo for this Nvidia Hackathon Build.
 - Please read my blog post for post-hackathon release and the features roadmap.
 - build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
+- This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025.
 

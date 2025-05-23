@@ -1,5 +1,19 @@
 # OpenCodeReview - Technical Documentation
 
+OpenCodeReview is an AI Powered Source Code Review tool.
+This tool use AI LLM and NVIDIA AIQ Toolkit as core engine to do the source code review.
+
+Core AI component uses NVIDIA AIQ Toolkit to perform AI Orchestration and Execution with AI agents, tools and workflow.
+This project uses NVIDIA AIQ Toolkit example examples/agents/mixture_of_agents as reference to setup code review workflow
+
+## AI Workflow
+AI Orchestrator run the following execution and tools
+- Run tool to get Source Code
+- Tell AI LLM to perform Code Review with OWASP Top 10 instructions
+- Call tool to create finding records
+This is the key workflow and it is flexible to add Code Quality Review and CVE search by updating this workflow.
+This core AI workflow is handled by NVIDIA AIQ Toolkit. 
+
 ## Architecture Overview
 
 The OpenCodeReview application utilizes a modern, containerized architecture with separate components for frontend, backend, AI processing, and data storage.

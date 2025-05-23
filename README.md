@@ -1,6 +1,6 @@
 # OpenCodeReview - Technical Documentation
 
-OpenCodeReview is an AI Powered Source Code Review tool.
+OpenCodeReview is an AI Powered Source Code Review tool and mini software vulnerability management system.
 This tool use AI LLM and NVIDIA AIQ Toolkit as core engine to do the source code review.
 
 Core AI component uses NVIDIA AIQ Toolkit to perform AI Orchestration and Execution with AI agents, tools and workflow.

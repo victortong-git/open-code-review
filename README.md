@@ -6,7 +6,7 @@ This tool use AI LLM and NVIDIA AIQ Toolkit as core engine to do the source code
 Core AI component uses NVIDIA AIQ Toolkit to perform AI Orchestration and Execution with AI agents, tools and workflow.
 This project uses NVIDIA AIQ Toolkit example examples/agents/mixture_of_agents as reference to setup code review workflow
 
-## AI Workflow
+## AI Workflow (Core AI Engine - NVIDIA AIQ Toolkit)
 AI Orchestrator run the following execution and tools
 - Run tool to get Source Code
 - Tell AI LLM to perform Code Review with OWASP Top 10 instructions

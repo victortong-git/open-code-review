@@ -1,0 +1,63 @@
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Production build files
+dist/
+build/
+out/
+
+# Database
+pgsql_data/
+
+# Test coverage
+coverage/
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# Editor directories and files
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Debug files
+.npm
+.eslintcache
+
+# Backend specific
+backend/dist/
+backend/node_modules/
+
+# Frontend specific
+frontend/dist/
+frontend/node_modules/
+
+# Miscellaneous
+logs/
+log/
+backup-docs/
+
+aiqtoolkit/

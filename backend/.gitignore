@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Compiled TypeScript output
+dist/
+
+# Environment variables
+.env
+*.env
+.env.*
+
+# Log files
+*.log
+logs
+*.log.*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Sequelize CLI generated files (if not needed in repo)
+# config/config.json # We use database.ts, but this might be auto-generated initially
+
+# IDE and editor directories
+.vscode/
+.idea/
+*.swp
+*.swo

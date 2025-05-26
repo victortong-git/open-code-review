@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Open Code Review</title>
+    <script>
+      // Check for theme preference in localStorage and apply it immediately
+      (function() {
+        try {
+          // Get the saved theme from localStorage
+          const savedTheme = localStorage.getItem('theme');
+          
+          // Apply dark mode only if explicitly saved as 'dark'
+          if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            // Default to light mode
+            document.documentElement.classList.remove('dark');
+          }
+          
+          // For debugging
+          console.log('Theme initialized:', savedTheme || 'light (default)');
+        } catch (e) {
+          console.error('Error setting initial theme:', e);
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

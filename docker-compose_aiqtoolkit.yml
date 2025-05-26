@@ -1,0 +1,22 @@
+services:
+  aiqtoolkit:
+    build:
+      context: ./aiqtoolkit
+      dockerfile: .tmp/Dockerfile
+    volumes:
+      - ./aiqtoolkit:/workspace
+      - ./logs:/workspace/logs
+      - ./my-agents:/workspace/my-agents
+    working_dir: /workspace
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PATH=/workspace/.venv/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+      - PYTHONPATH=/workspace:/workspace/src
+    networks:
+      - reviewnet
+    tty: true
+    stdin_open: true
+
+networks:
+  reviewnet:
+    driver: bridge

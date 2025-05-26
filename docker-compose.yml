@@ -1,0 +1,97 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: adminpass
+      POSTGRES_DB: opencodereview
+      POSTGRES_DB_TEST: opencodereview_test
+    volumes:
+      - ./pgsql_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    networks:
+      - reviewnet
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://admin:adminpass@db:5432/opencodereview
+      DATABASE_URL_TEST: postgresql://admin:adminpass@db:5432/opencodereview_test
+      NODE_ENV: development
+    volumes:
+      - ./backend:/usr/src/app
+      - /usr/src/app/node_modules
+      - ./projects:/usr/src/app/projects
+    networks:
+      - reviewnet
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5174:5174"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    networks:
+      - reviewnet
+    environment:
+      VITE_API_URL: http://localhost:8001/api
+
+  aiqtoolkit-ui:
+    build:
+      context: .
+      dockerfile: ./aiqtoolkit-ui/Dockerfile
+    ports:
+      - "3000:3000"
+    networks:
+      - reviewnet
+    environment:
+      NODE_ENV: production
+      HOSTNAME: "0.0.0.0"
+      PORT: 3000
+      NEXT_PUBLIC_HTTP_CHAT_COMPLETION_URL: "http://aiqtoolkit:8000/chat/stream"
+      NEXT_PUBLIC_WEBSOCKET_CHAT_COMPLETION_URL: "ws://aiqtoolkit:8000/websocket"
+      NEXT_PUBLIC_WEB_SOCKET_DEFAULT_ON: "true"
+      NEXT_PUBLIC_ENABLE_INTERMEDIATE_STEPS: "true"
+
+
+  aiqtoolkit:
+    build:
+      context: ./aiqtoolkit
+      dockerfile: .tmp/Dockerfile
+    volumes:
+      - ./aiqtoolkit:/workspace
+      - ./logs:/workspace/logs
+      - ./projects:/workspace/.tmp/projects
+      - ./my-agents:/workspace/my-agents
+    working_dir: /workspace
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+      - PATH=/workspace/.venv/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+      - PYTHONPATH=/workspace:/workspace/src
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    ports:
+      - "8000:8000"
+    command: ["bash", "-c", "cd /workspace && source .venv/bin/activate && aiq serve --config_file=my-agents/open_code_review/configs/config.yml --port 8000 --host 0.0.0.0"]
+    networks:
+      - reviewnet
+    tty: true
+    stdin_open: true
+
+networks:
+  reviewnet:
+    driver: bridge
+

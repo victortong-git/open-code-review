@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark mode transitions */
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+@layer components {
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6;
+
+    height: auto;
+    min-height: 200px;
+    max-height: 300px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Markdown content styling */
+  .markdown-content {
+    @apply prose dark:prose-invert max-w-none;
+  }
+  
+  .markdown-content h1 {
+    @apply text-2xl font-bold mb-4 text-gray-900 dark:text-white;
+  }
+  
+  .markdown-content h2 {
+    @apply text-xl font-semibold mb-3 mt-6 text-gray-800 dark:text-gray-100;
+  }
+  
+  .markdown-content h3 {
+    @apply text-lg font-medium mb-2 mt-4 text-gray-800 dark:text-gray-100;
+  }
+  
+  .markdown-content p {
+    @apply mb-4 text-gray-700 dark:text-gray-300;
+  }
+  
+  .markdown-content ul, .markdown-content ol {
+    @apply mb-4 pl-6;
+  }
+  
+  .markdown-content li {
+    @apply mb-1 text-gray-700 dark:text-gray-300;
+  }
+  
+  .markdown-content a {
+    @apply text-blue-600 dark:text-blue-400 hover:underline;
+  }
+  
+  .card-stats {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-3;
+
+    height: auto;
+    min-height: auto;
+    max-height: 110px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .btn {
+    @apply px-4 py-2 rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-primary {
+    @apply bg-blue-600 text-white hover:bg-blue-700;
+  }
+  
+  .btn-secondary {
+    @apply bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600;
+  }
+  
+  .btn-sm {
+    @apply py-1 px-2 text-sm;
+  }
+  
+  .btn-danger {
+    @apply bg-red-600 text-white hover:bg-red-700;
+  }
+  
+  .btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700;
+  }
+  
+  .btn-warning {
+    @apply bg-yellow-500 text-white hover:bg-yellow-600;
+  }
+  
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .input {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white;
+  }
+}

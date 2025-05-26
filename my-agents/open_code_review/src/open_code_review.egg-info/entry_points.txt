@@ -1,0 +1,2 @@
+[aiq.components]
+open_code_review = open_code_review.register

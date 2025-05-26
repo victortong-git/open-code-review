@@ -1,0 +1,46 @@
+Examine the following code specifically for OWASP 2021 A02: Cryptographic Failures vulnerabilities:
+
+Focus ONLY on identifying Cryptographic Failures issues, which include:
+1. Data transmitted in clear text (HTTP, SMTP, FTP, etc.) instead of using encryption (TLS)
+2. Use of deprecated or weak cryptographic algorithms or protocols (MD5, SHA1, RC4, DES, etc.)
+3. Use of default, weak, or hardcoded cryptographic keys
+4. Inadequate key management (rotation, generation, storage, etc.)
+5. Missing or improper certificate validation
+6. Insufficient randomness in cryptographic functions or random number generation
+7. Use of padding oracles or other cryptographic side-channel vulnerabilities
+8. Sensitive data stored in plaintext or inadequately encrypted
+9. Hardcoded passwords, tokens, or cryptographic seeds
+10. Improper handling of secrets in configuration files, source code, or environment variables
+
+Type Options specific to A02 issues:
+- Insecure Cryptographic Storage
+- Weak Encryption
+- Hardcoded Secret
+- Insecure Data Transmission
+- Missing TLS
+- Weak Random Number Generation
+- Improper Certificate Validation
+- Inadequate Key Management
+- Other Cryptographic Issue
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. Use the type options,
+    "line_number": (integer) the line number where the issue was found,
+    "issues_found": (boolean) true if A02 issues were found, false if no A02 issues detected,
+    "description": (string) a brief summary focusing only on cryptographic failures found,
+    "severity": (string) the severity of the issues found (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level specifically for cryptographic context,
+    "recommendation": (array) list of suggestions to specifically address the cryptographic vulnerabilities with sample code examples,
+    "code_content": (string) extract part of related code from original code content and add comment to highlight the cryptographic issue
+}
+]
+
+Please add comment with "<--- issue" this highlight the code line having issue in code_content
+
+Requirement for description, it should be details and easy to understand. And it should label in newline to say "This issue is based on OWASP 2021 Top 10 Axx xxxxx to review".
+
+This is an automated code review submission focused exclusively on OWASP A01: Broken Access Control.
+Please return the result in JSON format object only with no other text.

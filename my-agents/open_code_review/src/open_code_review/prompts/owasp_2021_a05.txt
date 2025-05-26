@@ -1,0 +1,46 @@
+Examine the following code specifically for OWASP 2021 A05: Security Misconfiguration vulnerabilities:
+
+Focus ONLY on identifying Security Misconfiguration issues, which include:
+1. Missing appropriate security hardening across any part of the application stack
+2. Unnecessary features are enabled or installed (e.g., ports, services, pages, accounts, privileges)
+3. Default accounts and their passwords are still enabled and unchanged
+4. Error handling reveals stack traces or other overly informative error messages
+5. Latest security features are disabled or not configured securely
+6. Security settings in application servers, frameworks, libraries, databases, etc., are not set to secure values
+7. Missing or improperly configured security headers or directives
+8. Software is out of date or vulnerable
+9. Overly permissive CORS settings
+10. Insecure default configurations
+
+Type Options specific to A05 issues:
+- Default Credentials
+- Unnecessary Features Enabled
+- Improper Error Handling
+- Missing Security Headers
+- Excessive Information Disclosure
+- Insecure Default Configuration
+- Improper CORS Configuration
+- Debugging Features Enabled
+- Insecure Framework Configuration
+- Other Security Misconfiguration
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. Use the type options,
+    "line_number": (integer) the line number where the issue was found,
+    "issues_found": (boolean) true if A05 issues were found, false if no A05 issues detected,
+    "description": (string) a brief summary focusing only on security misconfiguration vulnerabilities found,
+    "severity": (string) the severity of the issues found (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level specifically for security misconfiguration context,
+    "recommendation": (array) list of suggestions to specifically address the security misconfiguration vulnerabilities with sample code examples,
+    "code_content": (string) extract part of related code from original code content and add comment to highlight the security misconfiguration issue
+}
+]
+Please add comment with "<--- issue" this highlight the code line having issue in code_content
+
+Requirement for description, it should be details and easy to understand. And it should label in newline to say "This issue is based on OWASP 2021 Top 10 Axx xxxxx to review".
+
+This is an automated code review submission focused exclusively on OWASP A01: Broken Access Control.
+Please return the result in JSON format object only with no other text.

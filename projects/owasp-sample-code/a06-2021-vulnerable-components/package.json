@@ -1,0 +1,36 @@
+{
+  "name": "vulnerable-node-application",
+  "version": "1.0.0",
+  "description": "Sample application with vulnerable dependencies",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Security Team",
+  "license": "MIT",
+  "dependencies": {
+    "express": "3.4.7",
+    "lodash": "4.17.15",
+    "jquery": "1.12.0",
+    "node-serialize": "0.0.4",
+    "minimist": "0.2.1",
+    "handlebars": "3.0.0",
+    "mongoose": "4.13.19",
+    "bootstrap": "3.0.0",
+    "nodemailer": "2.6.4",
+    "socket.io": "1.2.0",
+    "moment": "2.8.0",
+    "ejs": "2.5.5",
+    "mime": "1.3.1",
+    "mysql": "2.13.0",
+    "ws": "3.3.1",
+    "request": "2.67.0"
+  },
+  "devDependencies": {
+    "eslint": "3.19.0",
+    "grunt": "0.4.5",
+    "webpack": "1.15.0",
+    "mocha": "2.3.0"
+  }
+}

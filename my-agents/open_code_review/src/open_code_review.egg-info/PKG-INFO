@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: open_code_review
+Version: 0.1.0
+Summary: Custom AIQ Toolkit Workflow
+Classifier: Programming Language :: Python
+Requires-Python: <3.13,>=3.11
+Requires-Dist: aiqtoolkit[langchain]

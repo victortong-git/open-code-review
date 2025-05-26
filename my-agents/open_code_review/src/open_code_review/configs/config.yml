@@ -1,0 +1,29 @@
+general:
+  use_uvloop: true
+  logging:
+    console:
+      _type: console
+      level: DEBUG
+    file:
+      _type: file
+      path: /tmp/open_code_review.log
+      level: DEBUG
+
+  front_end:
+    _type: fastapi
+
+llms:
+  openai_executor:
+    _type: openai
+    model_name: gpt-4o-mini
+    temperature: 0.0
+    max_tokens: 20480
+  openai_alternative:
+    _type: openai
+    model_name: gpt-4-turbo
+    temperature: 0.0
+    max_tokens: 16384
+
+workflow:
+  _type: open_code_review
+  llm: openai_executor

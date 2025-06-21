@@ -71,121 +71,61 @@ All components run in isolated Docker containers for maintainability and scalabi
 
 ```
 .
-├── aiqtoolkit/                      # Nvidia NeMo Agent Toolkit
-│   └── my-agents/
-│       └── code-reviewer/           # Custom agent for Open Code Review
-├── aiqtoolkit-ui/                   # Nvidia NeMo Agent Toolkit UI
-├── frontend/                        # React.js frontend
-├── backend/                         # Node.js backend
-├── projects/                        # Project folder for user uploads
-├── pgsql_data/                      # PostgreSQL data folder
-├── docker-compose.yml               # Docker configuration
-├── README.md                        # Project documentation
-├── restart.sh                       # Deployment script
-├── run_aiq_hello_world.sh          # Testing utility
-├── run_code_review_test.sh         # Testing utility
-├── run-migrations.sh               # Database initialization script
-├── update_aiqtoolkit.sh           # AIQ Toolkit build script
-├── .env                            # Environment configuration
-├── 00-setup_aiqtoolkit.sh                # AIQ Toolkit setup script
-├── aiqtoolkit/                           # Nvidia NeMo Agent Toolkit
-│   ├── aiq.code-workspace
-│   ├── CHANGELOG.md
-│   ├── CODE-OF-CONDUCT.md
-│   ├── CONTRIBUTING.md
-│   ├── LICENSE-3rd-party.txt
-│   ├── LICENSE.md
-│   ├── manifest.yaml
-│   ├── pyproject.toml
-│   ├── README.md
-│   ├── SECURITY.md
-│   ├── uv.lock
-│   ├── ci/
-│   ├── docker/
-│   ├── docs/
-│   ├── examples/
-│   ├── external/
-│   ├── logs/
-│   ├── my-agents/
-│   ├── packages/
-│   ├── scripts/
-│   ├── src/
-│   └── tests/
-├── aiqtoolkit-ui/                        # Nvidia NeMo Agent Toolkit UI
-│   ├── Dockerfile
-│   └── env-setup.sh
-├── backend/                              # Node.js backend
-│   ├── Dockerfile
-│   ├── jest.config.js
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── config/
-│   ├── models/
-│   ├── projects/
-│   └── src/
-├── docker-compose.yml                    # Docker configuration
-├── docker-compose_aiqtoolkit.yml         # AIQ Toolkit Docker Compose
+├── .env_example                          # Environment template
+├── .gitignore                            # Git ignore rules
+├── 00-setup_aiqtoolkit.sh               # AIQ Toolkit setup script
+├── docker-compose.yml                   # Main Docker configuration
+├── docker-compose_aiqtoolkit.yml        # AIQ Toolkit Docker Compose
 ├── Dockerfile-aiqtoolkit                 # AIQ Toolkit Dockerfile
 ├── env-aiqtoolkit-ui                     # AIQ Toolkit UI environment config
-├── frontend/                             # React.js frontend
-│   ├── API_DOCUMENTATION.md
-│   ├── Dockerfile
-│   ├── eslint.config.js
-│   ├── index.html
-│   ├── package.json
-│   ├── postcss.config.cjs
-│   ├── postcss.config.js
-│   ├── README.md
-│   ├── restart-app.sh
-│   ├── tailwind.config.cjs
-│   ├── tailwind.config.js
-│   ├── tsconfig.app.json
-│   ├── tsconfig.json
-│   ├── tsconfig.node.json
-│   ├── vite.config.ts
-│   ├── public/
-│   ├── scripts/
-│   └── src/
-├── logs/
-├── my-agents/
-│   └── open_code_review/
-├── package.json
-├── pgsql_data/                           # PostgreSQL data folder
-│   ├── pg_hba.conf
-│   ├── pg_ident.conf
-│   ├── PG_VERSION
-│   ├── postgresql.auto.conf
-│   ├── postgresql.conf
-│   ├── postmaster.opts
-│   ├── postmaster.pid
-│   ├── base/
-│   ├── global/
-│   ├── pg_commit_ts/
-│   ├── pg_dynshmem/
-│   ├── pg_logical/
-│   ├── pg_multixact/
-│   ├── pg_notify/
-│   ├── pg_replslot/
-│   ├── pg_serial/
-│   ├── pg_snapshots/
-│   ├── pg_stat/
-│   ├── pg_stat_tmp/
-│   ├── pg_subtrans/
-│   ├── pg_tblspc/
-│   ├── pg_twophase/
-│   ├── pg_wal/
-│   └── pg_xact/
-├── projects/                             # Project folder for user uploads
-│   ├── owasp-sample-code/
-│   └── vulnerable-project/
+├── package.json                          # Root package configuration
 ├── README.md                             # Project documentation
-├── restart.sh                            # Deployment script
+├── restart.sh                            # Application restart script
 ├── run_example.sh                        # Example run script
 ├── run_migrations.sh                     # Database initialization script
 ├── run_opencodereview.sh                 # OpenCodeReview run script
 ├── start_open-code-review.sh             # Start all services
 ├── stop_open-code-review.sh              # Stop all services
-└── ...                                   # Other files and folders
+├── aiqtoolkit-ui/                        # NVIDIA NeMo Agent Toolkit UI
+│   ├── Dockerfile
+│   └── env-setup.sh
+├── backend/                              # Node.js backend
+│   ├── .gitignore                        # Backend git ignore
+│   ├── .sequelizerc                      # Sequelize config
+│   ├── Dockerfile
+│   ├── jest.config.js                    # Jest test configuration
+│   ├── package.json                      # Backend dependencies
+│   ├── tsconfig.json                     # TypeScript configuration
+│   ├── config/                           # Configuration files
+│   ├── models/                           # Database models
+│   ├── projects/                         # Project data
+│   └── src/                              # Source code
+├── frontend/                             # React.js frontend
+│   ├── .gitignore                        # Frontend git ignore
+│   ├── .stylelintrc.json                 # Stylelint configuration
+│   ├── API_DOCUMENTATION.md              # API documentation
+│   ├── Dockerfile
+│   ├── README.md                         # Frontend documentation
+│   ├── eslint.config.js                  # ESLint configuration
+│   ├── index.html                        # Main HTML file
+│   ├── package.json                      # Frontend dependencies
+│   ├── postcss.config.cjs                # PostCSS configuration
+│   ├── postcss.config.js                 # PostCSS configuration (JS)
+│   ├── restart-app.sh                    # Frontend restart script
+│   ├── tailwind.config.cjs               # Tailwind CSS configuration
+│   ├── tailwind.config.js                # Tailwind CSS configuration (JS)
+│   ├── tsconfig.app.json                 # App TypeScript configuration
+│   ├── tsconfig.json                     # TypeScript configuration
+│   ├── tsconfig.node.json                # Node TypeScript configuration
+│   ├── vite.config.ts                    # Vite configuration
+│   ├── public/                           # Static assets
+│   ├── scripts/                          # Build scripts
+│   └── src/                              # Source code
+├── my-agents/                            # Custom OpenCodeReview agents
+│   └── open_code_review/                 # Code review agent
+└── projects/                             # Project uploads folder
+    ├── owasp-sample-code/                # OWASP sample project
+    └── vulnerable-project/               # Sample vulnerable project
 ```
 
 ## Recommended AI Models

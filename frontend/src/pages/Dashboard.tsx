@@ -41,6 +41,7 @@ const Dashboard: React.FC = () => {
   
   const { currentProject, loading: projectLoading } = useSelector((state: RootState) => state.projects);
   const { files, loading: filesLoading } = useSelector((state: RootState) => state.files);
+  const { findings } = useSelector((state: RootState) => state.analysis);
 
   useEffect(() => {
     if (projectId) {
@@ -205,11 +206,13 @@ const Dashboard: React.FC = () => {
         );
       case 'security':
         return (
-          <>
+          <div className="space-y-6">
             {projectId && <SecurityDashboard projectId={parseInt(projectId)} />}
-            {projectId && <FindingsDistribution />}
-            {projectId && <VulnerabilityMatrix />}
-          </>
+            <div className="grid grid-cols-1 gap-6">
+              {projectId && <FindingsDistribution />}
+              {projectId && <VulnerabilityMatrix findings={findings} />}
+            </div>
+          </div>
         );
       /* Code Quality tab removed for now - will be used in next version */
       case 'files':

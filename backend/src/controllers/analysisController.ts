@@ -586,21 +586,15 @@ export const analysisController = {
     const projectId = parseInt(id, 10);
     
     try {
-      // Get all findings for the project through the appropriate associations
+      // Get all findings for the project through the file association
       const findings = await Finding.findAll({
         include: [
           {
-            model: CodeSnippet,
-            as: 'codeSnippet',
-            include: [
-              {
-                model: File,
-                as: 'file',
-                where: {
-                  project_id: projectId
-                }
-              }
-            ]
+            model: File,
+            as: 'file',
+            where: {
+              project_id: projectId
+            }
           }
         ]
       });

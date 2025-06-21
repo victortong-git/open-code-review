@@ -47,18 +47,19 @@ The OpenCodeReview application utilizes a modern, containerized architecture wit
 ```
 All components run in isolated Docker containers for maintainability and scalability.
 
-+-------------+         +-------------+         +-----------------+
-|  Frontend   |<------->|  Backend    |<------->|  NeMo Agent Toolkit    |
-|  (React)    |  HTTP/  | (Node.js/   |  HTTP/  | (Python FastAPI)|
-|             |  WS     | Express)    |  WS     |                 |
-+-------------+         +-------------+         +-----------------+
-                              |
-                              v
-                        +-------------+
-                        |  Database   |
-                        | (PostgreSQL)|
-                        |             |
-                        +-------------+
+```
++-------------+         +-------------+         +-----------------------+
+|  Frontend   |<------->|  Backend    |<------->|  NeMo Agent Toolkit   |
+|  (React)    |  HTTP/  | (Node.js/   |  HTTP/  | (Python FastAPI)      |
+|             |  WS     |  Express)   |  WS     |                       |
++-------------+         +-------------+         +-----------------------+
+                       |
+                       v
+                  +-------------+
+                  |  Database   |
+                  | (PostgreSQL)|
+                  +-------------+
+```
 ```
 
 ### Network Configuration

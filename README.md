@@ -1,27 +1,27 @@
 # OpenCodeReview - Technical Documentation
 
 OpenCodeReview is an AI Powered Source Code Review tool and mini software vulnerability management system.
-This tool use AI LLM and NVIDIA AIQ Toolkit as core engine to do the source code review.
+This tool use AI LLM and NVIDIA NeMo Agent Toolkit as core engine to do the source code review.
 
-Core AI component uses NVIDIA AIQ Toolkit to perform AI Orchestration and Execution with AI agents, tools and workflow.
-This project uses NVIDIA AIQ Toolkit example examples/agents/mixture_of_agents as reference to setup code review workflow
+Core AI component uses NVIDIA NeMo Agent Toolkit to perform AI Orchestration and Execution with AI agents, tools and workflow.
+This project uses NVIDIA NeMo Agent Toolkit example examples/agents/mixture_of_agents as reference to setup code review workflow
 
-This project enables traditional static management platforms to integrate intelligent AI capabilities by using NVIDIA AIQ Toolkit.
+This project enables traditional static management platforms to integrate intelligent AI capabilities by using NVIDIA NeMo Agent Toolkit.
 
-## AI Agentic Workflow (Core AI Engine - NVIDIA AIQ Toolkit)
+## AI Agentic Workflow (Core AI Engine - NVIDIA NeMo Agent Toolkit)
 AI Orchestrator run the following execution and tools
 - Run tool to get Source Code
 - Tell AI LLM to perform Code Review with OWASP Top 10 instructions
 - Call tool to create finding records
 This is the key workflow and it is flexible to add Code Quality Review and CVE search by updating this workflow.
-This core AI workflow is handled by NVIDIA AIQ Toolkit. 
+This core AI workflow is handled by NVIDIA NeMo Agent Toolkit. 
 
-I embeded all expert AI instruction in AIQ Toolkit for code review automation.
+I embeded all expert AI instruction in NeMo Agent Toolkit for code review automation.
 
 ## Why OpenCodeReview Is Beneficial?  
 - **User-Friendly**: No AI prompt engineering expertise needed—expert prompt instructions are fully embedded.  
-- **Highly Flexible & Customizable**: Easily update prompts, add instructions, fine-tune workflows, and adjust requirements using the NVIDIA AIQ Toolkit.  
-- **Continuous Improvement**: The core engine leverages LLM models and the AIQ Toolkit, ensuring ongoing advancements as LLMs evolve and new features are developed.  
+- **Highly Flexible & Customizable**: Easily update prompts, add instructions, fine-tune workflows, and adjust requirements using the NVIDIA NeMo Agent Toolkit.  
+- **Continuous Improvement**: The core engine leverages LLM models and the NeMo Agent Toolkit, ensuring ongoing advancements as LLMs evolve and new features are developed.  
 
 ![File Page](https://3c-kingdom.com/opencodereview/assets/file_page.png)
 
@@ -38,8 +38,8 @@ The OpenCodeReview application utilizes a modern, containerized architecture wit
 - **Frontend**: React.js - Provides the interactive user interface
 - **Backend**: Node.js with Express - Handles API requests and business logic
 - **Database**: PostgreSQL with PG Vector support - Stores application data with vector capabilities
-- **AIQ Toolkit**: NVIDIA AIQ Toolkit - Powers code analysis and review features
-- **AIQ Toolkit-UI**: NVIDIA AIQ Toolkit UI - Provides visualization for AI operations
+- **NeMo Agent Toolkit**: NVIDIA NeMo Agent Toolkit - Powers code analysis and review features
+- **NeMo Agent Toolkit-UI**: NVIDIA NeMo Agent Toolkit UI - Provides visualization for AI operations
 - **Deployment**: Docker - Ensures consistent environment across deployments
 
 ## System Architecture
@@ -48,7 +48,7 @@ The OpenCodeReview application utilizes a modern, containerized architecture wit
 All components run in isolated Docker containers for maintainability and scalability.
 
 +-------------+         +-------------+         +-----------------+
-|  Frontend   |<------->|  Backend    |<------->|  AIQ Toolkit    |
+|  Frontend   |<------->|  Backend    |<------->|  NeMo Agent Toolkit    |
 |  (React)    |  HTTP/  | (Node.js/   |  HTTP/  | (Python FastAPI)|
 |             |  WS     | Express)    |  WS     |                 |
 +-------------+         +-------------+         +-----------------+
@@ -70,10 +70,10 @@ All components run in isolated Docker containers for maintainability and scalabi
 
 ```
 .
-├── aiqtoolkit/                      # Nvidia AIQ Toolkit
+├── aiqtoolkit/                      # Nvidia NeMo Agent Toolkit
 │   └── my-agents/
 │       └── code-reviewer/           # Custom agent for Open Code Review
-├── aiqtoolkit-ui/                   # Nvidia AIQ Toolkit UI
+├── aiqtoolkit-ui/                   # Nvidia NeMo Agent Toolkit UI
 ├── frontend/                        # React.js frontend
 ├── backend/                         # Node.js backend
 ├── projects/                        # Project folder for user uploads
@@ -109,16 +109,16 @@ This can help you to have a better code review results.
    tar -xvzf <filename>.tgz
    ```
    Make sure download both part 1 and part 2 files.
-   Part 1 is aiqtoolkit and aiqtoolkit-ui.
+   Part 1 is NeMo Agent Toolkit and NeMo Agent Toolkit UI.
    Part 2 is the OpenCodeReview Platform Stack.
    a folder named `opencode-review` will be created.
    cd into the `opencode-review` folder.
-   run update_aiqtoolkit.sh. This is used to setup aiqtoolkit.
+   run update_aiqtoolkit.sh. This is used to setup NeMo Agent Toolkit.
 4. Edit .env file to set your API keys. NVIDIA_API_KEY and OPENAI_API_KEY are required.
 5. Execute the deployment script: `./restart.sh`. docker login is required to run this script for docker image nvcr.io/nvidia/base/ubuntu.
 6. Access the application at `http://localhost:5174`
 
-Setting up AIQ Toolkit may need some technical knowledges. If you have problem setting it up, please contact me to get another full package file.
+Setting up NeMo Agent Toolkit may need some technical knowledges. If you have problem setting it up, please contact me to get another full package file.
 This file is too large to host in my GitHub. So, I cannot post the file here.
 You can download the packaged file from 
 [open-code-review_2025-05-21_full_img.tgz](https://3c-kingdom.com/opencodereview/tgz/open-code-review_2025-05-21_full_img.tgz) (~630MB)

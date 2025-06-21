@@ -9,6 +9,7 @@ services:
       - ./my-agents:/workspace/my-agents
     working_dir: /workspace
     environment:
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY}
       - PYTHONDONTWRITEBYTECODE=1
       - PATH=/workspace/.venv/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
       - PYTHONPATH=/workspace:/workspace/src

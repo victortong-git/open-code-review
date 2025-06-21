@@ -200,7 +200,7 @@ const FindingsDistribution: React.FC = () => {
         </p>
       </div>
       
-      <div className="h-72">
+      <div className="h-72 chart-container">
         <Bar data={data} options={options} />
       </div>
     </div>

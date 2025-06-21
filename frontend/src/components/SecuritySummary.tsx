@@ -301,7 +301,7 @@ const SecuritySummary: React.FC<SecuritySummaryProps> = ({
           </div>
         </div>
         {totalFindings > 0 ? (
-          <div className="h-72 flex-1 relative">
+          <div className="h-72 flex-1 relative chart-container">
             <Pie data={findingsData} options={pieOptions} />
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center">
@@ -325,7 +325,7 @@ const SecuritySummary: React.FC<SecuritySummaryProps> = ({
           <h3 className="text-lg font-semibold">Code Discovery Status</h3>
           <CodeBracketIcon className="h-6 w-6 text-blue-500" />
         </div>
-        <div className="h-72 flex-1 relative">
+        <div className="h-72 flex-1 relative chart-container">
           <Bar data={filesStatusData} options={barOptions} />
         </div>
       </div>

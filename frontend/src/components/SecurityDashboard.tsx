@@ -1,13 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { 
-  DocumentTextIcon
+  DocumentTextIcon,
+  ArrowDownTrayIcon,
+  PrinterIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import type { RootState } from '../store/store';
 import SecuritySummary from './SecuritySummary';
 // Import commented out for future use
 // import SecurityTrends from './SecurityTrends';
 import { getProjectStats } from '../features/projectSlice';
+import { exportToPDF, exportAsImage, printWithCharts } from '../utils/exportUtils';
 import axios from 'axios';
 
 interface SecurityDashboardProps {
@@ -31,6 +35,21 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ projectId }) => {
   const [findingsData, setFindingsData] = useState<FindingsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
+  const [exportLoading, setExportLoading] = useState(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (exportDropdownOpen && !target.closest('.export-dropdown')) {
+        setExportDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [exportDropdownOpen]);
   
   useEffect(() => {
     fetchFindingsData();
@@ -122,9 +141,56 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ projectId }) => {
       </div>
     );
   }
+
+  // Export functions
+  const handleExportPDF = async () => {
+    setExportLoading(true);
+    setExportDropdownOpen(false);
+    try {
+      await exportToPDF('security-dashboard', {
+        filename: `security-report-project-${projectId}`,
+        quality: 0.95,
+        scale: 2
+      });
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('Failed to export PDF. Please try again.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handleExportImage = async () => {
+    setExportLoading(true);
+    setExportDropdownOpen(false);
+    try {
+      await exportAsImage('security-dashboard', {
+        filename: `security-report-project-${projectId}`,
+        format: 'png',
+        quality: 1,
+        scale: 2
+      });
+    } catch (error) {
+      console.error('Image export failed:', error);
+      alert('Failed to export image. Please try again.');
+    } finally {
+      setExportLoading(false);
+    }
+  };
+
+  const handlePrint = async () => {
+    setExportDropdownOpen(false);
+    try {
+      await printWithCharts();
+    } catch (error) {
+      console.error('Print failed:', error);
+      // Fallback to regular print
+      window.print();
+    }
+  };
   
   return (
-    <div className="space-y-6">
+    <div id="security-dashboard" className="space-y-6">
       {/* Security Dashboard Header */}
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-4">
         <div className="flex justify-between items-center mb-6">
@@ -228,13 +294,54 @@ const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ projectId }) => {
         
         {/* Action Buttons */}
         <div className="flex justify-end mt-4">
-          <button 
-            className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700"
-            onClick={() => window.print()}
-          >
-            <DocumentTextIcon className="h-5 w-5 mr-1" />
-            Export Report
-          </button>
+          <div className="relative export-dropdown">
+            {/* Export Dropdown Button */}
+            <button
+              className={`inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${exportLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+              disabled={exportLoading}
+            >
+              {exportLoading ? (
+                <svg className="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+              ) : (
+                <ArrowDownTrayIcon className="h-5 w-5 mr-2" />
+              )}
+              Export Report
+              <ChevronDownIcon className="h-4 w-4 ml-2" />
+            </button>
+
+            {/* Export Dropdown Menu */}
+            {exportDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg ring-1 ring-black ring-opacity-5 z-50">
+                <div className="py-1">
+                  <button
+                    onClick={handleExportPDF}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <DocumentTextIcon className="h-4 w-4 mr-3" />
+                    Export as PDF
+                  </button>
+                  <button
+                    onClick={handleExportImage}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <ArrowDownTrayIcon className="h-4 w-4 mr-3" />
+                    Export as Image
+                  </button>
+                  <button
+                    onClick={handlePrint}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <PrinterIcon className="h-4 w-4 mr-3" />
+                    Print Report
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -97,3 +97,50 @@ html {
     @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white;
   }
 }
+
+/* Print styles for chart export */
+@media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+  
+  canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+  
+  .card {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  
+  /* Ensure charts are visible in print */
+  .chart-container canvas {
+    display: block !important;
+    visibility: visible !important;
+  }
+  
+  /* Hide interactive elements during print */
+  button:not(.print-button) {
+    display: none !important;
+  }
+  
+  /* Fix chart dimensions for print */
+  .h-72 {
+    height: 300px !important;
+  }
+  
+  .h-64 {
+    height: 250px !important;
+  }
+}

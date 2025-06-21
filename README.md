@@ -86,7 +86,106 @@ All components run in isolated Docker containers for maintainability and scalabi
 ├── run_code_review_test.sh         # Testing utility
 ├── run-migrations.sh               # Database initialization script
 ├── update_aiqtoolkit.sh           # AIQ Toolkit build script
-└── .env                            # Environment configuration
+├── .env                            # Environment configuration
+├── 00-setup_aiqtoolkit.sh                # AIQ Toolkit setup script
+├── aiqtoolkit/                           # Nvidia NeMo Agent Toolkit
+│   ├── aiq.code-workspace
+│   ├── CHANGELOG.md
+│   ├── CODE-OF-CONDUCT.md
+│   ├── CONTRIBUTING.md
+│   ├── LICENSE-3rd-party.txt
+│   ├── LICENSE.md
+│   ├── manifest.yaml
+│   ├── pyproject.toml
+│   ├── README.md
+│   ├── SECURITY.md
+│   ├── uv.lock
+│   ├── ci/
+│   ├── docker/
+│   ├── docs/
+│   ├── examples/
+│   ├── external/
+│   ├── logs/
+│   ├── my-agents/
+│   ├── packages/
+│   ├── scripts/
+│   ├── src/
+│   └── tests/
+├── aiqtoolkit-ui/                        # Nvidia NeMo Agent Toolkit UI
+│   ├── Dockerfile
+│   └── env-setup.sh
+├── backend/                              # Node.js backend
+│   ├── Dockerfile
+│   ├── jest.config.js
+│   ├── package.json
+│   ├── tsconfig.json
+│   ├── config/
+│   ├── models/
+│   ├── projects/
+│   └── src/
+├── docker-compose.yml                    # Docker configuration
+├── docker-compose_aiqtoolkit.yml         # AIQ Toolkit Docker Compose
+├── Dockerfile-aiqtoolkit                 # AIQ Toolkit Dockerfile
+├── env-aiqtoolkit-ui                     # AIQ Toolkit UI environment config
+├── frontend/                             # React.js frontend
+│   ├── API_DOCUMENTATION.md
+│   ├── Dockerfile
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package.json
+│   ├── postcss.config.cjs
+│   ├── postcss.config.js
+│   ├── README.md
+│   ├── restart-app.sh
+│   ├── tailwind.config.cjs
+│   ├── tailwind.config.js
+│   ├── tsconfig.app.json
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   ├── vite.config.ts
+│   ├── public/
+│   ├── scripts/
+│   └── src/
+├── logs/
+├── my-agents/
+│   └── open_code_review/
+├── package.json
+├── pgsql_data/                           # PostgreSQL data folder
+│   ├── pg_hba.conf
+│   ├── pg_ident.conf
+│   ├── PG_VERSION
+│   ├── postgresql.auto.conf
+│   ├── postgresql.conf
+│   ├── postmaster.opts
+│   ├── postmaster.pid
+│   ├── base/
+│   ├── global/
+│   ├── pg_commit_ts/
+│   ├── pg_dynshmem/
+│   ├── pg_logical/
+│   ├── pg_multixact/
+│   ├── pg_notify/
+│   ├── pg_replslot/
+│   ├── pg_serial/
+│   ├── pg_snapshots/
+│   ├── pg_stat/
+│   ├── pg_stat_tmp/
+│   ├── pg_subtrans/
+│   ├── pg_tblspc/
+│   ├── pg_twophase/
+│   ├── pg_wal/
+│   └── pg_xact/
+├── projects/                             # Project folder for user uploads
+│   ├── owasp-sample-code/
+│   └── vulnerable-project/
+├── README.md                             # Project documentation
+├── restart.sh                            # Deployment script
+├── run_example.sh                        # Example run script
+├── run_migrations.sh                     # Database initialization script
+├── run_opencodereview.sh                 # OpenCodeReview run script
+├── start_open-code-review.sh             # Start all services
+├── stop_open-code-review.sh              # Stop all services
+└── ...                                   # Other files and folders
 ```
 
 ## Recommended AI Models

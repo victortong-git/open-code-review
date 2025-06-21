@@ -74,7 +74,7 @@ const FindingDetail = () => {
   const [finding, setFinding] = useState<Finding | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [highlightedLine, setHighlightedLine] = useState<number | null>(null);
+  const [highlightedLines, setHighlightedLines] = useState<number[]>([]);
 
   useEffect(() => {
     const fetchFinding = async () => {
@@ -83,14 +83,20 @@ const FindingDetail = () => {
         const response = await api.get(`/findings/${id}`);
         setFinding(response.data);
         
-        // Find line with "<--- issue" for highlighting
+        // Find all lines with "<--- issue" for highlighting
         if (response.data.code_content) {
           const lines = response.data.code_content.split('\n');
-          const issueLineIndex = lines.findIndex((line: string) => line.includes('<--- issue'));
-          if (issueLineIndex !== -1) {
-            setHighlightedLine(issueLineIndex + 1); // +1 because line numbers are 1-based
+          const issueLines: number[] = [];
+          lines.forEach((line: string, index: number) => {
+            if (line.includes('<--- issue')) {
+              issueLines.push(index + 1); // +1 because line numbers are 1-based
+            }
+          });
+          
+          if (issueLines.length > 0) {
+            setHighlightedLines(issueLines);
           } else if (response.data.line_number) {
-            setHighlightedLine(response.data.line_number);
+            setHighlightedLines([response.data.line_number]);
           }
         }
         
@@ -349,7 +355,7 @@ const FindingDetail = () => {
               wrapLines={true}
               showLineNumbers={true}
               lineProps={(lineNumber: number) => {
-                const isHighlighted = highlightedLine === lineNumber;
+                const isHighlighted = highlightedLines.includes(lineNumber);
                 return {
                   style: { 
                     display: 'block',

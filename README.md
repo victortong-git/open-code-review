@@ -150,5 +150,5 @@ This can help you to have a better code review results.
 - This POC build does not have enough time to having a better source code control and git submodule setup. Next build will set the aiqtoolkit as submodule and put code reviewe agent as package for AIQ Toolkit.
 - Please read my blog post for post-hackathon release and the features roadmap.
 - build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
-- This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025.
+- This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025. (Updated resumed.)
 - This repo has been updated to use updated setup script.

@@ -1,6 +1,6 @@
 // Import the Express app
 import request from 'supertest';
-import app from './app';
+import { app } from './app';
 
 describe('GET /', () => {
   it('should return "Backend server is running!"', async () => {

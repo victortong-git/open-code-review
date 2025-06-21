@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../app';
+import { app } from '../app';
 import { sequelize } from '../models'; // Assuming sequelize is exported from models/index.ts
 
 // Global beforeAll/afterAll in test-setup.ts handles sync and close

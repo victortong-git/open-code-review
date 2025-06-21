@@ -159,7 +159,7 @@ const FileScan: React.FC = () => {
     if (fileId) {
       setIsScanning(true);
       try {
-        await dispatch(scanFile(parseInt(fileId))).unwrap();
+        dispatch(scanFile({ fileId: parseInt(fileId) }));
         // Refetch findings and file after scan
         await dispatch(fetchFindingsByFile(parseInt(fileId))).unwrap();
         await dispatch(fetchFileById(parseInt(fileId))).unwrap();

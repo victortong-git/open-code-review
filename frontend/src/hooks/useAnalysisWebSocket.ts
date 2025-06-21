@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useDispatch } from 'react-redux';
-import { addFinding, updateAnalysisStatus } from '../features/analysisSlice.js';
+import { addFinding, setAnalysisStatus } from '../features/analysisSlice.js';
 import showToast from '../components/Toast';
 
 interface UseAnalysisWebSocketProps {
@@ -53,7 +53,7 @@ export const useAnalysisWebSocket = ({ fileId, jobId }: UseAnalysisWebSocketProp
           case 'analysis_progress':
             if (data.jobId === jobId) {
               setProgress(data.progress);
-              dispatch(updateAnalysisStatus({
+              dispatch(setAnalysisStatus({
                 fileId,
                 status: data.status,
                 progress: data.progress
@@ -81,7 +81,7 @@ export const useAnalysisWebSocket = ({ fileId, jobId }: UseAnalysisWebSocketProp
           case 'analysis_complete':
             if (data.jobId === jobId) {
               setProgress(100);
-              dispatch(updateAnalysisStatus({
+              dispatch(setAnalysisStatus({
                 fileId,
                 status: 'completed',
                 progress: 100

@@ -105,28 +105,31 @@ This can help you to have a better code review results.
 
 ### Installation Steps
 1. Create a directory: `/hackathon/`
-2. Save the downloaded application tgz file to `/hackathon/` and extract it by running:
+2. Git clone the repository:
    ```bash
-   tar -xvzf <filename>.tgz
+   git clone https://github.com/victortong-git/open-code-review.git
    ```
-   Make sure download both part 1 and part 2 files.
-   Part 1 is NeMo Agent Toolkit and NeMo Agent Toolkit UI.
-   Part 2 is the OpenCodeReview Platform Stack.
-   a folder named `opencode-review` will be created.
-   cd into the `opencode-review` folder.
-   run update_aiqtoolkit.sh. This is used to setup NeMo Agent Toolkit.
-4. Edit .env file to set your API keys. NVIDIA_API_KEY and OPENAI_API_KEY are required.
-5. Execute the deployment script: `./restart.sh`. docker login is required to run this script for docker image nvcr.io/nvidia/base/ubuntu.
-6. Access the application at `http://localhost:5174`
+3. Edit .env file to set your API keys. NVIDIA_API_KEY and OPENAI_API_KEY are required.
+4. setup NeMo Agent Toolkit and NeMo Agent Toolkit UI by running the following commands:
+   ```bash
+   cd open-code-review/
+   ./00-setup_aiqtoolkit.sh
+   ```
+   This will build the NeMo Agent Toolkit.
+5. Start the OpenCodeReview application:
+   ```bash
+   ./start_open-code-review.sh
+   ```
+   This will start the backend, frontend, and NeMo Agent Toolkit services.
+6. Migrate the database:
+   ```bash
+   ./run_migrations.sh
+   ```
+   This will create the necessary database tables and initial data.   
+7. Access the application at `http://localhost:5174`
 
-Setting up NeMo Agent Toolkit may need some technical knowledges. If you have problem setting it up, please contact me to get another full package file.
-This file is too large to host in my GitHub. So, I cannot post the file here.
-You can download the packaged file from 
-[open-code-review_2025-05-21_full_img.tgz](https://3c-kingdom.com/opencodereview/tgz/open-code-review_2025-05-21_full_img.tgz) (~630MB)
-This packaged file contains configured components. Basically, you just need to edit .env with the Nvidia and OpenAI API key.
-Then, run restart.sh to start the docker.
 
-# How to Setup the Environment (Video)
+# How to Setup the Environment (Video) (Outdated)
 [![Setup Video](https://img.youtube.com/vi/wxGG2Ra0ljI/0.jpg)](https://youtu.be/wxGG2Ra0ljI)
 
 # Short Demo Video
@@ -148,3 +151,4 @@ Then, run restart.sh to start the docker.
 - Please read my blog post for post-hackathon release and the features roadmap.
 - build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
 - This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025.
+- This repo has been updated to use updated setup script.

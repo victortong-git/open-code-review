@@ -53,12 +53,12 @@ All components run in isolated Docker containers for maintainability and scalabi
 |  (React)    |  HTTP/  | (Node.js/   |  HTTP/  | (Python FastAPI)      |
 |             |  WS     |  Express)   |  WS     |                       |
 +-------------+         +-------------+         +-----------------------+
-                       |
-                       v
-                  +-------------+
-                  |  Database   |
-                  | (PostgreSQL)|
-                  +-------------+
+                               |
+                               v
+                        +-------------+
+                        |  Database   |
+                        | (PostgreSQL)|
+                        +-------------+
 
 ```
 

@@ -133,7 +133,7 @@ This can help you to have a better code review results.
 [![Setup Video](https://img.youtube.com/vi/wxGG2Ra0ljI/0.jpg)](https://youtu.be/wxGG2Ra0ljI)
 
 # Short Demo Video
-[![Demo Video](https://img.youtube.com/vi/W-IZSS-T_6U/0.jpg)](https://youtu.be/W-IZSS-T_6U)
+[![Demo Video](https://img.youtube.com/vi/3yBqN369ZBE/0.jpg)](https://youtu.be/3yBqN369ZBE)
 
 ## OpenCodeReview Home and Blog Pages
 - [OpenCodeReview HomePage](http://3c-kingdom.com/opencodereview/)

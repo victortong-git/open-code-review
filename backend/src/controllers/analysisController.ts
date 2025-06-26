@@ -338,30 +338,61 @@ export const analysisController = {
         currentReview: 'general_review'
       });
       
+      // Set up event listeners for this specific job
+      const progressHandler = (data: any) => {
+        if (data.fileId === fileId) {
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.progress = data.progress;
+            jobInfo.currentReview = data.reviewType;
+            jobInfo.currentIndex = data.currentIndex;
+            jobInfo.reviewStatus = data.reviewStatus;
+            activeJobs.set(jobId, jobInfo);
+            
+            // Broadcast progress update via WebSocket
+            broadcastWebSocketMessage({
+              type: 'analysis_progress',
+              fileId: fileId,
+              jobId: jobId,
+              progress: data.progress,
+              currentReview: data.reviewType,
+              reviewStatus: data.reviewStatus,
+              currentIndex: data.currentIndex,
+              totalReviews: data.totalReviews
+            });
+          }
+        }
+      };
+
+      const errorHandler = (data: any) => {
+        if (data.fileId === fileId) {
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.currentReview = data.reviewType;
+            jobInfo.reviewStatus = data.reviewStatus;
+            activeJobs.set(jobId, jobInfo);
+            
+            // Broadcast error update via WebSocket
+            broadcastWebSocketMessage({
+              type: 'review_error',
+              fileId: fileId,
+              jobId: jobId,
+              reviewType: data.reviewType,
+              reviewStatus: data.reviewStatus,
+              error: data.error
+            });
+          }
+        }
+      };
+
+      // Add listeners
+      aiqClient.on('review_progress', progressHandler);
+      aiqClient.on('review_error', errorHandler);
+      
       // Start comprehensive review asynchronously
       (async () => {
         try {
-          const results = await aiqClient.performComprehensiveReview(fileId, (progress, currentReview) => {
-            // Update job progress in real-time
-            const jobInfo = activeJobs.get(jobId);
-            if (jobInfo) {
-              jobInfo.progress = progress;
-              jobInfo.currentReview = currentReview;
-              activeJobs.set(jobId, jobInfo);
-              
-              // Broadcast progress update via WebSocket
-              broadcastWebSocketMessage({
-                type: 'analysis_progress',
-                fileId: fileId,
-                jobId: jobId,
-                progress: progress,
-                currentReview: currentReview,
-                reviewStatus: 'in_progress',
-                currentIndex: Math.ceil(progress / 100 * 11),
-                totalReviews: 11
-              });
-            }
-          });
+          const results = await aiqClient.performComprehensiveReview(fileId);
 
           // Save the findings to the database
           await saveComprehensiveReviewFindings(jobId, results.results, fileId);
@@ -406,6 +437,10 @@ export const analysisController = {
             status: 'failed',
             error: error instanceof Error ? error.message : 'Unknown error'
           });
+        } finally {
+          // Clean up event listeners
+          aiqClient.off('review_progress', progressHandler);
+          aiqClient.off('review_error', errorHandler);
         }
       })();
       

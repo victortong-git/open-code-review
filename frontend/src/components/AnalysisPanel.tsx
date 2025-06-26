@@ -116,28 +116,66 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
   
   // Update review progress when analysis status updates
   useEffect(() => {
-    if (analysisStatus.currentReview && isComprehensiveReview) {
+    // Handle completion first - this takes priority
+    if (analysisStatus.status === 'completed' && isComprehensiveReview) {
+      console.log('Analysis completed - marking all reviews as completed');
+      setReviewProgress(prev => 
+        prev.map(item => ({ ...item, status: 'completed' }))
+      );
+      
+      if (pollingIntervalId) {
+        stopStatusPolling();
+        setIsAnalyzing(false);
+      }
+      
+      // If completed, fetch results and dispatch event
+      if (analysisStatus.jobId) {
+        // Get analysis results
+        dispatch(getAnalysisResults(analysisStatus.jobId));
+        
+        // Mark the file as processed
+        dispatch(markFileProcessed({ fileId }));
+        
+        // Notify parent component that analysis is completed
+        window.dispatchEvent(new CustomEvent('analysisCompleted', { 
+          detail: { fileId, status: 'completed', progress: 100 } 
+        }));
+      }
+      return; // Exit early - don't process individual progress updates
+    }
+    
+    // Handle failure
+    if (analysisStatus.status === 'failed' && pollingIntervalId) {
+      stopStatusPolling();
+      setIsAnalyzing(false);
+      
+      // Mark the current review as failed
+      if (isComprehensiveReview && currentReview) {
+        setReviewProgress(prev => 
+          prev.map(item => 
+            item.reviewType === currentReview ? 
+              { ...item, status: 'failed' } : 
+              item
+          )
+        );
+      }
+      return; // Exit early
+    }
+    
+    // Handle normal progress updates (only if not completed/failed)
+    if (analysisStatus.currentReview && isComprehensiveReview && 
+        analysisStatus.status !== 'completed' && analysisStatus.status !== 'failed') {
       // Update the current review
       setCurrentReview(analysisStatus.currentReview);
       
       // Update the progress of individual reviews
       setReviewProgress(prev => {
         return prev.map(item => {
-          // If this is the current review, apply its status
-          if (item.reviewType === analysisStatus.currentReview) {
-            // If we have a specific reviewStatus for this review, use it
-            if (analysisStatus.reviewStatus) {
-              console.log(`Setting ${item.reviewType} to status: ${analysisStatus.reviewStatus}`);
-              return { ...item, status: analysisStatus.reviewStatus };
-            }
-            return { ...item, status: 'in_progress' };
-          }
-          
           // If we have current and total indexes, use those to determine completion
           if (analysisStatus.currentIndex !== undefined && 
               analysisStatus.totalReviews !== undefined) {
             
-            // Get index of this review type
+            // Get index of this review type (0-based index)
             const reviewTypes = [
               'general_review',
               'owasp_2021_a01',
@@ -154,64 +192,21 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
             
             const itemIndex = reviewTypes.indexOf(item.reviewType);
             
-            // If the current index is past this review's index, it must be completed
-            if (itemIndex < (analysisStatus.currentIndex - 1) && item.status !== 'failed') {
+            // currentIndex is 1-based (number of completed reviews)
+            // If this review's 0-based index is less than currentIndex, it's completed
+            if (itemIndex < analysisStatus.currentIndex && item.status !== 'failed') {
               return { ...item, status: 'completed' };
             }
-          } else {
-            // Fallback to original method
-            const currentIndex = OWASP_CATEGORIES.findIndex(cat => cat.id === analysisStatus.currentReview);
-            const itemIndex = OWASP_CATEGORIES.findIndex(cat => cat.id === item.reviewType);
             
-            // Only mark as completed if we're past this review and it's not already marked as failed
-            if (itemIndex < currentIndex && item.status !== 'failed') {
-              return { ...item, status: 'completed' };
+            // If this is the current review being processed, mark as in_progress
+            if (itemIndex === (analysisStatus.currentIndex - 1) && item.status !== 'failed') {
+              return { ...item, status: 'in_progress' };
             }
           }
           
           return item;
         });
       });
-    }
-    
-    // Stop polling when analysis completes or fails
-    if ((analysisStatus.status === 'completed' || analysisStatus.status === 'failed') && pollingIntervalId) {
-      stopStatusPolling();
-      setIsAnalyzing(false);
-      
-      if (analysisStatus.status === 'completed') {
-        // Mark all reviews as completed when the whole process is done
-        if (isComprehensiveReview) {
-          setReviewProgress(prev => 
-            prev.map(item => ({ ...item, status: 'completed' }))
-          );
-        }
-        
-        // If completed, fetch results and dispatch event
-        if (analysisStatus.jobId) {
-          // Get analysis results
-          dispatch(getAnalysisResults(analysisStatus.jobId));
-          
-          // Mark the file as processed
-          dispatch(markFileProcessed({ fileId }));
-          
-          // Notify parent component that analysis is completed
-          window.dispatchEvent(new CustomEvent('analysisCompleted', { 
-            detail: { fileId, status: 'completed', progress: 100 } 
-          }));
-        }
-      } else if (analysisStatus.status === 'failed') {
-        // Mark the current review as failed
-        if (isComprehensiveReview && currentReview) {
-          setReviewProgress(prev => 
-            prev.map(item => 
-              item.reviewType === currentReview ? 
-                { ...item, status: 'failed' } : 
-                item
-            )
-          );
-        }
-      }
     }
   }, [analysisStatus, dispatch, fileId, pollingIntervalId, isComprehensiveReview, currentReview]);
   

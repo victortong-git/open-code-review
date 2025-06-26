@@ -1,0 +1,47 @@
+Examine the following code specifically for OWASP 2021 A10: Server-Side Request Forgery (SSRF) vulnerabilities:
+
+Focus ONLY on identifying Server-Side Request Forgery issues, which include:
+1. Accepting full URLs from untrusted sources
+2. Fetching remote resources without validating URL or target
+3. Not enforcing URL scheme, port, or destination IP restrictions
+4. Not validating incoming URLs against an allowlist
+5. Using user input directly in HTTP client libraries or APIs
+6. Accepting URL redirections, webhooks, or callbacks from untrusted sources
+7. Allowing local file or internal service access via URL manipulation
+8. Bypassing network security controls through server-initiated requests
+9. Processing user-controlled URLs without proper validation
+10. Insufficient restrictions on IP ranges, domains, or internal services
+
+Type Options specific to A10 issues:
+- Server-Side Request Forgery (SSRF)
+- URL Validation Bypass
+- Internal Service Exposure
+- Unauthorized Network Access
+- Missing URL Validation
+- Cloud Metadata Access
+- Local File Access via URL
+- Service Port Scanning
+- Webhook Abuse
+- Other SSRF Issue
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. Use the type options,
+    "line_number": (integer) the line number where the issue was found,
+    "issues_found": (boolean) true if A10 issues were found, false if no A10 issues detected,
+    "description": (string) a brief summary focusing only on SSRF vulnerabilities found,
+    "severity": (string) the severity of the issues found (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level specifically for SSRF context,
+    "recommendation": (array) list of suggestions to specifically address the SSRF vulnerabilities with sample code examples,
+    "code_content": (string) extract part of related code from original code content and add comment to highlight the SSRF issue
+}
+]
+
+Please add comment with "<--- issue" this highlight the code line having issue in code_content
+
+Requirement for description, it should be details and easy to understand. And it should label in newline to say "This issue is based on OWASP 2021 Top 10 Axx xxxxx to review".
+
+This is an automated code review submission focused exclusively on OWASP A01: Broken Access Control.
+Please return the result in JSON format object only with no other text.

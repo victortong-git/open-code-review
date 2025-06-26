@@ -91,6 +91,19 @@ services:
     tty: true
     stdin_open: true
 
+  mcp_server:
+    build:
+      context: ./mcp_server
+      dockerfile: Dockerfile
+    ports:
+      - "8002:8002"
+    networks:
+      - reviewnet
+    volumes:
+      - ./mcp_server:/app
+    depends_on:
+      - backend
+
 networks:
   reviewnet:
     driver: bridge

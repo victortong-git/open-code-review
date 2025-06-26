@@ -1,0 +1,47 @@
+Examine the following code specifically for OWASP 2021 A06: Vulnerable and Outdated Components vulnerabilities:
+
+Focus ONLY on identifying Vulnerable and Outdated Components issues, which include:
+1. Not tracking versions of all components in use (client-side and server-side)
+2. Using outdated, unsupported, or vulnerable software and libraries
+3. Not scanning for vulnerabilities regularly and subscribing to security bulletins
+4. Not fixing or upgrading the underlying platform, frameworks, and dependencies
+5. Using components from untrusted sources
+6. Not maintaining compatibility with patched or upgraded libraries
+7. Using components with known vulnerabilities
+8. Missing proper dependency management (e.g., no lockfiles, unused dependencies)
+9. Using unmaintained open-source libraries or packages
+10. Using vulnerable or unsupported versions of frameworks or runtime environments
+
+Type Options specific to A06 issues:
+- Outdated Component
+- Vulnerable Library
+- Unmaintained Dependency
+- Known CVE Present
+- Improper Dependency Management
+- Insecure Package Source
+- Unsupported Framework Version
+- Missing Dependency Lockfile
+- Transitive Vulnerable Dependency
+- Other Component Issue
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. Use the type options,
+    "line_number": (integer) the line number where the issue was found,
+    "issues_found": (boolean) true if A06 issues were found, false if no A06 issues detected,
+    "description": (string) a brief summary focusing only on vulnerable component issues found,
+    "severity": (string) the severity of the issues found (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level specifically for vulnerable components context,
+    "recommendation": (array) list of suggestions to specifically address the vulnerable components issues with sample code examples,
+    "code_content": (string) extract part of related code from original code content and add comment to highlight the vulnerable component issue
+}
+]
+
+Please add comment with "<--- issue" this highlight the code line having issue in code_content
+
+Requirement for description, it should be details and easy to understand. And it should label in newline to say "This issue is based on OWASP 2021 Top 10 Axx xxxxx to review".
+
+This is an automated code review submission focused exclusively on OWASP A01: Broken Access Control.
+Please return the result in JSON format object only with no other text.

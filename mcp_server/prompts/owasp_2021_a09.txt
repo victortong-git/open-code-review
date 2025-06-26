@@ -1,0 +1,47 @@
+Examine the following code specifically for OWASP 2021 A09: Security Logging and Monitoring Failures vulnerabilities:
+
+Focus ONLY on identifying Security Logging and Monitoring Failures issues, which include:
+1. Missing logging for security-relevant events like login attempts or failures
+2. Inadequate logs that don't contain sufficient data or context for security investigations
+3. Logs not stored in a format suitable for log management systems
+4. Missing or inadequate monitoring of critical operations
+5. Logs with sensitive data such as PII, credentials, or session tokens
+6. Inconsistent or inadequate log levels
+7. Missing timestamps or standardized formats for logs
+8. Logs susceptible to injection or tampering
+9. Missing auditing for critical business flows or sensitive data access
+10. Lack of alerting for suspicious activities
+
+Type Options specific to A09 issues:
+- Missing Audit Logs
+- Insufficient Logging Detail
+- Logging Sensitive Data
+- Missing Log Monitoring
+- Improper Log Format
+- Missing Critical Event Logging
+- Log Tampering Risk
+- Missing Alert Mechanism
+- Inadequate Authentication Logging
+- Other Logging/Monitoring Issue
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. Use the type options,
+    "line_number": (integer) the line number where the issue was found,
+    "issues_found": (boolean) true if A09 issues were found, false if no A09 issues detected,
+    "description": (string) a brief summary focusing only on logging and monitoring vulnerabilities found,
+    "severity": (string) the severity of the issues found (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level specifically for logging/monitoring context,
+    "recommendation": (array) list of suggestions to specifically address the logging and monitoring vulnerabilities with sample code examples,
+    "code_content": (string) extract part of related code from original code content and add comment to highlight the logging/monitoring issue
+}
+]
+
+Please add comment with "<--- issue" this highlight the code line having issue in code_content
+
+Requirement for description, it should be details and easy to understand. And it should label in newline to say "This issue is based on OWASP 2021 Top 10 Axx xxxxx to review".
+
+This is an automated code review submission focused exclusively on OWASP A01: Broken Access Control.
+Please return the result in JSON format object only with no other text.

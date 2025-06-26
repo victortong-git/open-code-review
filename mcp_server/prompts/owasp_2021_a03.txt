@@ -1,0 +1,47 @@
+Examine the following code specifically for OWASP 2021 A03: Injection vulnerabilities:
+
+Focus ONLY on identifying Injection issues, which include:
+1. SQL Injection - unvalidated or unsanitized user data used in SQL queries
+2. NoSQL Injection - unvalidated inputs used in NoSQL database queries
+3. Command Injection - user inputs directly passed to system command shells
+4. OS Command Injection - unfiltered user-provided data in OS commands
+5. Cross-Site Scripting (XSS) - reflected, stored, or DOM-based XSS
+6. LDAP Injection - attacks targeting LDAP statements with malicious user input
+7. Expression Language Injection - manipulation of expression language statements
+8. Template Injection - exploitation of template engines to execute code
+9. XML Injection - including XXE (XML External Entity) attacks
+10. ORM/Query Injection - bypassing ORM protections to execute raw queries
+
+Type Options specific to A03 issues:
+- SQL Injection
+- NoSQL Injection
+- Command Injection
+- Cross-Site Scripting (XSS)
+- LDAP Injection
+- Template Injection
+- XML/XXE Injection
+- ORM Injection
+- Log Injection
+- Other Injection Issue
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. Use the type options,
+    "line_number": (integer) the line number where the issue was found,
+    "issues_found": (boolean) true if A03 issues were found, false if no A03 issues detected,
+    "description": (string) a brief summary focusing only on injection vulnerabilities found,
+    "severity": (string) the severity of the issues found (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level specifically for injection context,
+    "recommendation": (array) list of suggestions to specifically address the injection vulnerabilities with sample code examples, 
+    "code_content": (string) extract part of related code from original code content and add comment to highlight the injection issue
+}
+]
+
+Please add comment with "<--- issue" this highlight the code line having issue in code_content
+
+Requirement for description, it should be details and easy to understand. And it should label in newline to say "This issue is based on OWASP 2021 Top 10 Axx xxxxx to review".
+
+This is an automated code review submission focused exclusively on OWASP A01: Broken Access Control.
+Please return the result in JSON format object only with no other text.

@@ -1,0 +1,29 @@
+Perform a general code quality review of the following code, focusing on non-security aspects:
+
+Focus on these areas:
+- Code structure and organization
+- Performance optimizations
+- Code readability and maintainability
+- Best practices and coding standards
+- Error handling (non-security related)
+- Documentation and comments
+- Code duplication and refactoring opportunities
+- Resource management and efficiency
+
+Return your findings as a JSON object with these fields:
+[
+{
+    "file_id": (string) the ID of the file being reviewed,
+    "type": (string) the type of issue found specifically related to this finding. E.g. Code structure and organization, Performance optimization, etc.
+    "line_number": (integer) the line number where the issue was found,
+    "description": (string) a brief summary of the finding,
+    "severity": (string) the severity of the issue (e.g., "critical", "high", "medium", "low"),
+    "severity_reason": (string) a brief explanation of the severity level,
+    "recommendation": (string) suggestions to address the finding with sample code examples,
+    "code_content": (string) extracted part of related code from original code content with comments to highlight the issue
+}
+]
+
+Please add comment with "<--- issue" to highlight the code line having issue in code_content.
+
+Please return the result in JSON format object only with no other text.

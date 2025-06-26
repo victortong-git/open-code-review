@@ -228,9 +228,11 @@ async def analyze_code(file_id: str, review_type: str):
         f.write(ai_prompt_message)
     
     try:
-        # Call the aiqtoolkit service for LLM response
-        llm_api_url = f"{AIQTOOLKIT_URL}/chat"
-        llm_payload = {"messages": [{"role": "user", "content": ai_prompt_message}], "max_tokens": 1000, "temperature": 0.7}
+        # Call the aiqtoolkit service for code review using the function
+        llm_api_url = f"{AIQTOOLKIT_URL}/generate"
+        llm_payload = {
+            "input_message": json.dumps({"file_id": file_id, "review_type": review_type})
+        }
         
         logger.info(f"Sending payload to aiqtoolkit: {json.dumps(llm_payload)}")
         llm_response = requests.post(llm_api_url, json=llm_payload, timeout=300) # Increased timeout to 300 seconds

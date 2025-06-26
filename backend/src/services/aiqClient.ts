@@ -273,40 +273,51 @@ export class AIQClient {
   }
   
   /**
-   * Send a request to the AI code analysis service for code review
-   * @param input_message The message to send to the AI service (e.g., "Review source code file id 123")
+   * Send a request directly to the AIQ toolkit for AI code analysis
+   * @param fileId The file ID to analyze
+   * @param reviewType The type of review to perform
    * @returns The response from the AI service
    */
-  async callAICodeAnalysis(input_message: string): Promise<any> {
+  async callAICodeAnalysis(fileId: number, reviewType: string): Promise<any> {
     try {
-      console.log(`Calling AI code analysis service at ${this.aiCodeAnalysisUrl} with message: ${input_message}`);
-      
-      const response = await axios.post(this.aiCodeAnalysisUrl, {
-        input_message
+      const aiqToolkitUrl = 'http://aiqtoolkit:8000/generate';
+      console.log(`Calling AIQ Toolkit directly at ${aiqToolkitUrl} for file ID: ${fileId}, review type: ${reviewType}`);
+
+      const response = await axios.post(aiqToolkitUrl, {
+        input_message: JSON.stringify({
+          file_id: fileId.toString(),
+          review_type: reviewType
+        })
       }, {
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        timeout: 1800000 // 30 minutes timeout for potentially longer AI processing
+        timeout: 300000 // 5 minutes timeout
       });
+
+      console.log('AIQ Toolkit response:', response.data);
       
-      console.log('AI code analysis response:', response.data);
+      // Parse the response if it's a string
+      if (typeof response.data === 'string') {
+        try {
+          return JSON.parse(response.data);
+        } catch (parseError) {
+          return { error: 'Failed to parse response', raw_response: response.data };
+        }
+      }
+      
       return response.data;
     } catch (error: any) {
-      console.error('Error calling AI code analysis:', error.message);
+      console.error('Error calling AIQ Toolkit:', error.message);
       if (error.response) {
-        // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
-        console.error('AI API Error:', error.response.status, error.response.data);
-        throw new Error(`AI code analysis failed with status ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+        console.error('AIQ Toolkit Error:', error.response.status, error.response.data);
+        throw new Error(`AIQ Toolkit request failed with status ${error.response.status}: ${JSON.stringify(error.response.data)}`);
       } else if (error.request) {
-        // The request was made but no response was received
-        console.error('No response received from AI service');
-        throw new Error('No response received from AI code analysis service');
+        console.error('No response received from AIQ Toolkit');
+        throw new Error('No response received from AIQ Toolkit');
       } else {
-        // Something happened in setting up the request
-        throw new Error(`Error setting up AI code analysis request: ${error.message}`);
+        throw new Error(`Error setting up AIQ Toolkit request: ${error.message}`);
       }
     }
   }
@@ -321,8 +332,7 @@ export class AIQClient {
     try {
       console.log(`Performing ${reviewType} code review for file ID: ${fileId}`);
       
-      const message = `file_id: ${fileId}, review_type: ${reviewType}`;
-      return await this.callAICodeAnalysis(message);
+      return await this.callAICodeAnalysis(fileId, reviewType);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`Error performing ${reviewType} code review:`, error.message);

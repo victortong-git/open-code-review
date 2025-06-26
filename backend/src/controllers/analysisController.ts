@@ -17,17 +17,76 @@ import { v4 as uuidv4 } from 'uuid';
 
 // Store active analysis jobs
 const activeJobs = new Map<string, {
-  fileId: number,
-  status: string,
-  progress: number,
-  findings: any[],
-  startTime: Date,
-  endTime?: Date,
-  currentReview?: string,
-  reviewStatus?: string,
-  currentIndex?: number,
-  totalReviews?: number
+  fileId: number;
+  status: string;
+  progress: number;
+  findings: any[];
+  startTime: Date;
+  endTime?: Date;
+  currentReview?: string;
+  reviewStatus?: string;
+  currentIndex?: number;
+  totalReviews?: number;
 }>();
+
+// WebSocket server instance for broadcasting
+let wsServer: any = null;
+
+/**
+ * Broadcast a message to all connected WebSocket clients
+ * @param message The message to broadcast
+ */
+function broadcastWebSocketMessage(message: any): void {
+  if (wsServer && wsServer.clients) {
+    wsServer.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify(message));
+      }
+    });
+  }
+}
+
+/**
+ * Setup WebSocket listeners for a job
+ * @param jobId The job ID
+ * @param fileId The file ID
+ */
+function setupJobListeners(jobId: string, fileId: number): void {
+  // Subscribe to events from the AIQ client
+  aiqClient.on('review_progress', (data: any) => {
+    if (data.fileId === fileId) {
+      const jobInfo = activeJobs.get(jobId);
+      if (jobInfo) {
+        jobInfo.progress = data.progress;
+        jobInfo.currentReview = data.reviewType;
+        jobInfo.reviewStatus = data.reviewStatus;
+        jobInfo.currentIndex = data.currentIndex;
+        jobInfo.totalReviews = data.totalReviews;
+      }
+    }
+  });
+
+  aiqClient.on('review_complete', (data: any) => {
+    if (data.fileId === fileId) {
+      const jobInfo = activeJobs.get(jobId);
+      if (jobInfo) {
+        jobInfo.status = 'completed';
+        jobInfo.progress = 100;
+        jobInfo.endTime = new Date();
+      }
+    }
+  });
+
+  aiqClient.on('review_error', (data: any) => {
+    if (data.fileId === fileId) {
+      const jobInfo = activeJobs.get(jobId);
+      if (jobInfo) {
+        jobInfo.reviewStatus = data.reviewStatus;
+        jobInfo.currentReview = data.reviewType;
+      }
+    }
+  });
+}
 
 /**
  * Save findings from a comprehensive review to the database
@@ -254,236 +313,101 @@ export const analysisController = {
         return;
       }
       
-      // Generate a job ID for this comprehensive review
+      // Generate a unique job ID for tracking
       const jobId = uuidv4();
       
-      // Track the job
+      // Initialize job tracking
       activeJobs.set(jobId, {
         fileId,
-        status: 'in_progress',
+        status: 'analyzing',
         progress: 0,
         findings: [],
         startTime: new Date(),
         currentReview: 'general_review',
         reviewStatus: 'in_progress',
         currentIndex: 1,
-        totalReviews: 11  // OWASP 2021 has 10 categories + general review
+        totalReviews: 11
       });
       
-      // Return the job ID immediately
-      res.status(202).json({ 
-        jobId, 
-        message: 'Comprehensive code review started',
-        status: 'in_progress',
-        progress: 0
+      // Return job info immediately for frontend tracking
+      res.status(200).json({
+        jobId,
+        fileId,
+        status: 'analyzing',
+        progress: 0,
+        currentReview: 'general_review'
       });
       
-      // Start the comprehensive review in the background
-      aiqClient.on('review_progress', (data: { 
-        fileId: number, 
-        progress: number, 
-        reviewType: string, 
-        currentIndex: number,
-        totalReviews: number,
-        reviewStatus: string 
-      }) => {
-        if (data.fileId === fileId) {
-          // Update job status
-          const job = activeJobs.get(jobId);
-          if (job) {
-            job.progress = data.progress;
-            job.currentReview = data.reviewType;
-            job.currentIndex = data.currentIndex;
-            job.totalReviews = data.totalReviews;
-            // Only set reviewStatus to 'completed' if the job is actually completed
-            job.reviewStatus = (data.reviewStatus === 'completed' && job.progress === 100) ? 'completed' : data.reviewStatus;
-            activeJobs.set(jobId, job);
-          }
-          // Broadcast status update to any connected clients
-          const statusUpdate = {
-            jobId,
-            status: 'in_progress',
-            progress: data.progress,
-            currentReview: data.reviewType,
-            currentIndex: data.currentIndex,
-            totalReviews: data.totalReviews,
-            reviewStatus: (data.reviewStatus === 'completed' && data.progress === 100) ? 'completed' : data.reviewStatus
-          };
-          
-          // Find any websocket connections for this job
-          const wss = (global as any).wss;
-          if (wss) {
-            wss.clients.forEach((client: WebSocket) => {
-              if (client.readyState === WebSocket.OPEN) {
-                // Check if this client is subscribed to this job
-                const subscribedJobs = (client as any).subscribedJobs || [];
-                if (subscribedJobs.includes(jobId)) {
-                  client.send(JSON.stringify({
-                    type: 'analysis_progress',
-                    ...statusUpdate
-                  }));
-                }
-              }
-            });
-          }
-        }
-      });
-      
-      aiqClient.on('review_error', (data: { 
-        fileId: number, 
-        reviewType: string, 
-        currentIndex: number,
-        totalReviews: number,
-        progress: number,
-        reviewStatus: string,
-        error: string 
-      }) => {
-        if (data.fileId === fileId) {
-          console.error(`Error in ${data.reviewType} review:`, data.error);
-          
-          // Update job status in the activeJobs map
-          const job = activeJobs.get(jobId);
-          if (job) {
-            job.progress = data.progress;
-            job.currentReview = data.reviewType;
-            job.currentIndex = data.currentIndex;
-            job.totalReviews = data.totalReviews;
-            job.reviewStatus = 'failed';  // Mark this specific review as failed
-            activeJobs.set(jobId, job);
-          }
-          
-          // Broadcast status update for this specific review
-          const statusUpdate = {
-            jobId,
-            status: 'in_progress', // Keep overall job as in_progress
-            progress: data.progress,
-            currentReview: data.reviewType,
-            currentIndex: data.currentIndex,
-            totalReviews: data.totalReviews,
-            reviewStatus: 'failed' // Mark this specific review as failed
-          };
-          
-          // Find any websocket connections for this job
-          const wss = (global as any).wss;
-          if (wss) {
-            wss.clients.forEach((client: WebSocket) => {
-              if (client.readyState === WebSocket.OPEN) {
-                // Check if this client is subscribed to this job
-                const subscribedJobs = (client as any).subscribedJobs || [];
-                if (subscribedJobs.includes(jobId)) {
-                  client.send(JSON.stringify({
-                    type: 'analysis_progress',
-                    ...statusUpdate
-                  }));
-                }
-              }
-            });
-          }
-        }
-      });
-      
-      aiqClient.on('review_complete', (data: { fileId: number, results: any[] }) => {
-        if (data.fileId === fileId) {
-          // Mark job as completed
-          const job = activeJobs.get(jobId);
-          if (job) {
-            job.status = 'completed';
-            job.progress = 100;
-            job.endTime = new Date();
-            // Find the last review type (e.g., a10) if available
-            let lastReviewType = 'completed';
-            let lastIndex = 0;
-            let totalReviews = 0;
-            if (Array.isArray(data.results) && data.results.length > 0) {
-              const last = data.results[data.results.length - 1];
-              if (last && last.type) {
-                lastReviewType = last.type;
-              }
-              lastIndex = data.results.length;
-              totalReviews = data.results.length;
-            }
-            job.currentReview = lastReviewType;
-            job.currentIndex = lastIndex;
-            job.totalReviews = totalReviews;
-            job.reviewStatus = 'completed';
-            // Store findings from all reviews
-            job.findings = data.results.flatMap(result => 
-              result.status === 'completed' && result.result.findings ? result.result.findings : []
-            );
-            activeJobs.set(jobId, job);
-            
-            // Save findings to the database
-            saveComprehensiveReviewFindings(jobId, data.results, fileId);
-            
-            // Broadcast completion to any connected clients
-            const statusUpdate = {
-              jobId,
-              status: 'completed',
-              progress: 100,
-              currentReview: lastReviewType,
-              currentIndex: lastIndex,
-              totalReviews: totalReviews,
-              reviewStatus: 'completed',
-              results: data.results
-            };
-            
-            // Find any websocket connections for this job
-            const wss = (global as any).wss;
-            if (wss) {
-              wss.clients.forEach((client: WebSocket) => {
-                if (client.readyState === WebSocket.OPEN) {
-                  // Check if this client is subscribed to this job
-                  const subscribedJobs = (client as any).subscribedJobs || [];
-                  if (subscribedJobs.includes(jobId)) {
-                    client.send(JSON.stringify({
-                      type: 'analysis_complete',
-                      ...statusUpdate
-                    }));
-                  }
-                }
+      // Start comprehensive review asynchronously
+      (async () => {
+        try {
+          const results = await aiqClient.performComprehensiveReview(fileId, (progress, currentReview) => {
+            // Update job progress in real-time
+            const jobInfo = activeJobs.get(jobId);
+            if (jobInfo) {
+              jobInfo.progress = progress;
+              jobInfo.currentReview = currentReview;
+              activeJobs.set(jobId, jobInfo);
+              
+              // Broadcast progress update via WebSocket
+              broadcastWebSocketMessage({
+                type: 'analysis_progress',
+                fileId: fileId,
+                jobId: jobId,
+                progress: progress,
+                currentReview: currentReview,
+                reviewStatus: 'in_progress',
+                currentIndex: Math.ceil(progress / 100 * 11),
+                totalReviews: 11
               });
             }
+          });
+
+          // Save the findings to the database
+          await saveComprehensiveReviewFindings(jobId, results.results, fileId);
+
+          // Mark job as completed
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.status = 'completed';
+            jobInfo.progress = 100;
+            jobInfo.endTime = new Date();
+            jobInfo.findings = results.results;
+            activeJobs.set(jobId, jobInfo);
           }
-        }
-      });
-      
-      // Start the comprehensive review process
-      aiqClient.performComprehensiveReview(fileId)
-        .catch((error: Error) => {
-          console.error('Error in comprehensive review:', error);
+          
+          // Broadcast completion via WebSocket
+          broadcastWebSocketMessage({
+            type: 'analysis_complete',
+            fileId: fileId,
+            jobId: jobId,
+            status: 'completed',
+            progress: 100,
+            results: results.results
+          });
+          
+          console.log(`Comprehensive review completed for file ID: ${fileId}, job ID: ${jobId}`);
+        } catch (error) {
+          console.error(`Error in comprehensive review for job ${jobId}:`, error);
           
           // Mark job as failed
-          const job = activeJobs.get(jobId);
-          if (job) {
-            job.status = 'failed';
-            job.endTime = new Date();
-            activeJobs.set(jobId, job);
-            
-            // Broadcast failure to any connected clients
-            const statusUpdate = {
-              jobId,
-              status: 'failed',
-              error: error.message
-            };
-            
-            // Find any websocket connections for this job
-            const wss = (global as any).wss;
-            if (wss) {
-              wss.clients.forEach((client: WebSocket) => {
-                if (client.readyState === WebSocket.OPEN) {
-                  // Check if this client is subscribed to this job
-                  const subscribedJobs = (client as any).subscribedJobs || [];
-                  if (subscribedJobs.includes(jobId)) {
-                    client.send(JSON.stringify({
-                      type: 'analysis_error',
-                      ...statusUpdate
-                    }));
-                  }
-                }
-              });
-            }
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.status = 'failed';
+            jobInfo.endTime = new Date();
+            activeJobs.set(jobId, jobInfo);
           }
-        });
+          
+          // Broadcast failure via WebSocket
+          broadcastWebSocketMessage({
+            type: 'analysis_error',
+            fileId: fileId,
+            jobId: jobId,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      })();
       
     } catch (error) {
       if (error instanceof Error) {
@@ -697,7 +621,7 @@ export const analysisController = {
       const jobId = uuidv4();
       
       // Call the AI code analysis service
-      const aiResponse = await aiqClient.callAICodeAnalysis(input_message || `Review source code file id ${fileId}`);
+      const aiResponse = await aiqClient.callAICodeAnalysis(fileId, 'general_review');
       
       // Track the job as completed
       activeJobs.set(jobId, {
@@ -730,160 +654,85 @@ export const analysisController = {
 };
 
 /**
- * Set up listeners for a job
- * @param jobId Job ID
- * @param fileId File ID
+ * Setup WebSocket handlers for analysis updates
+ * @param wss WebSocket server instance
  */
-function setupJobListeners(jobId: string, fileId: number): void {
-  aiqClient.subscribeToJob(
-    jobId,
-    // Progress handler
-    async (data) => {
-      const jobInfo = activeJobs.get(jobId);
-      if (jobInfo) {
-        jobInfo.progress = data.progress;
-        jobInfo.status = data.status;
-        activeJobs.set(jobId, jobInfo);
+export function setupWebSocketHandlers(wss: any): void {
+  // Store WebSocket server instance for broadcasting
+  wsServer = wss;
+  
+  // Subscribe to events from the AIQ client to broadcast updates
+  aiqClient.on('analysis_progress', (data: any) => {
+    // Broadcast progress updates to all connected clients
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({
+          type: 'analysis_progress',
+          ...data
+        }));
       }
-    },
-    // New finding handler
-    async (data) => {
-      try {
-        // Begin transaction
-        const transaction = await db.transaction();
-        
-        try {
-          // Create code snippet
-          const codeSnippet = await CodeSnippet.create({
-            file_id: fileId,
-            start_line: data.startLine,
-            end_line: data.endLine,
-            code: data.codeContent
-          }, { transaction });
-          
-          // Get the file to get its MD5
-          const file = await File.findByPk(fileId);
-          const fileMd5 = file?.md5 || undefined;
-          
-          // Create finding
-          const finding = await Finding.create({
-            type: data.type,
-            severity: data.severity,
-            description: data.description,
-            recommendation: data.remediation,
-            code_content: codeSnippet.code,
-            md5: fileMd5
-          }, { transaction });
-          
-          // Commit transaction
-          await transaction.commit();
-          
-          // Update job info
-          const jobInfo = activeJobs.get(jobId);
-          if (jobInfo) {
-            jobInfo.findings.push({
-              id: finding.id,
-              type: finding.type,
-              severity: finding.severity,
-              description: finding.description,
-              recommendation: finding.recommendation,
-              codeSnippet: {
-                id: codeSnippet.id,
-                start_line: codeSnippet.start_line,
-                end_line: codeSnippet.end_line,
-                code: codeSnippet.code
-              }
-            });
-            activeJobs.set(jobId, jobInfo);
-          }
-        } catch (err) {
-          if (err instanceof Error) {
-            console.error('Transaction error:', err.message);
-          }
-          // Rollback transaction in case of error
-          await transaction.rollback();
-          throw err;
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error('Error handling new finding:', error.message);
-        } else {
-          console.error('Unknown error handling new finding:', error);
-        }
-      }
-    },
-    // Completion handler
-    async (data) => {
-      try {
-        // Update job info
-        const jobInfo = activeJobs.get(jobId);
-        if (jobInfo) {
-          jobInfo.status = 'completed';
-          jobInfo.progress = 100;
-          jobInfo.endTime = new Date();
-          activeJobs.set(jobId, jobInfo);
-        }
-        
-        // Close WebSocket
-        aiqClient.closeWebSocket(jobId);
-      } catch (error) {
-        if (error instanceof Error) {
-          console.error('Error handling job completion:', error.message);
-        } else {
-          console.error('Unknown error handling job completion:', error);
-        }
-      }
-    },
-    // Error handler
-    (error) => {
-      console.error(`Error in job ${jobId}:`, error);
-      
-      // Update job info
-      const jobInfo = activeJobs.get(jobId);
-      if (jobInfo) {
-        jobInfo.status = 'failed';
-        jobInfo.endTime = new Date();
-        activeJobs.set(jobId, jobInfo);
-      }
-    }
-  );
-}
+    });
+  });
 
-/**
- * Set up WebSocket handlers for broadcasting analysis updates to clients
- * @param wss WebSocket server
- */
-export function setupWebSocketHandlers(wss: WebSocket.Server): void {
-  // Set up event listeners
-  aiqClient.on('analysis_progress', (data) => {
-    broadcastToClients(wss, 'analysis_progress', data);
+  aiqClient.on('new_finding', (data: any) => {
+    // Broadcast new findings to all connected clients
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({
+          type: 'new_finding',
+          ...data
+        }));
+      }
+    });
   });
-  
-  aiqClient.on('new_finding', (data) => {
-    broadcastToClients(wss, 'new_finding', data);
+
+  aiqClient.on('analysis_complete', (data: any) => {
+    // Broadcast completion updates to all connected clients
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({
+          type: 'analysis_complete',
+          ...data
+        }));
+      }
+    });
   });
-  
-  aiqClient.on('analysis_complete', (data) => {
-    broadcastToClients(wss, 'analysis_complete', data);
+
+  aiqClient.on('review_progress', (data: any) => {
+    // Broadcast review progress updates to all connected clients
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({
+          type: 'review_progress',
+          ...data
+        }));
+      }
+    });
+  });
+
+  aiqClient.on('review_complete', (data: any) => {
+    // Broadcast review completion to all connected clients
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({
+          type: 'review_complete',
+          ...data
+        }));
+      }
+    });
+  });
+
+  aiqClient.on('review_error', (data: any) => {
+    // Broadcast review errors to all connected clients
+    wss.clients.forEach((client: any) => {
+      if (client.readyState === 1) { // WebSocket.OPEN
+        client.send(JSON.stringify({
+          type: 'review_error',
+          ...data
+        }));
+      }
+    });
   });
 }
 
-/**
- * Broadcast a message to all connected WebSocket clients
- * @param wss WebSocket server
- * @param type Message type
- * @param data Message data
- */
-function broadcastToClients(wss: WebSocket.Server, type: string, data: any): void {
-  const message = JSON.stringify({
-    type,
-    ...data,
-    timestamp: new Date().toISOString()
-  });
-  
-  wss.clients.forEach((client) => {
-    if (client.readyState === WebSocket.OPEN) {
-      client.send(message);
-    }
-  });
-}
+

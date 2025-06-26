@@ -182,6 +182,21 @@ export const deleteFinding = createAsyncThunk(
   }
 );
 
+export const deleteAllFindingsByFile = createAsyncThunk(
+  'findings/deleteAllFindingsByFile',
+  async (fileId: number, { rejectWithValue }) => {
+    try {
+      const response = await findingApi.deleteAllByFile(fileId);
+      return { fileId, response: response.data };
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || error.message);
+      }
+      return rejectWithValue('An unknown error occurred');
+    }
+  }
+);
+
 const findingSlice = createSlice({
   name: 'findings',
   initialState,
@@ -344,6 +359,29 @@ const findingSlice = createSlice({
         }
       })
       .addCase(deleteFinding.rejected, (state, action) => {
+        state.loading = false;
+        if (typeof action.payload === 'string') {
+          state.error = action.payload;
+        } else {
+          state.error = 'An unknown error occurred';
+        }
+      })
+      // deleteAllFindingsByFile
+      .addCase(deleteAllFindingsByFile.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(deleteAllFindingsByFile.fulfilled, (state, action) => {
+        state.loading = false;
+        const { fileId } = action.payload;
+        // Remove all findings for the specific file
+        state.findings = state.findings.filter(finding => finding.file_id !== fileId);
+        // Clear current finding if it belongs to the deleted file
+        if (state.currentFinding && state.currentFinding.file_id === fileId) {
+          state.currentFinding = null;
+        }
+      })
+      .addCase(deleteAllFindingsByFile.rejected, (state, action) => {
         state.loading = false;
         if (typeof action.payload === 'string') {
           state.error = action.payload;

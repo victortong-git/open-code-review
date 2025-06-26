@@ -14,6 +14,8 @@ router.put('/:id', findingController.updateFinding);
 router.delete('/:id', findingController.deleteFinding);
 // Route for getting findings by project ID
 router.get('/projects/:id', findingController.getFindingsByProjectId);
+// Route for deleting all findings by file ID
+router.delete('/files/:id/all', findingController.deleteAllFindingsByFileId);
 
 // router.get('/', placeholderHandler); // Placeholder removed
 

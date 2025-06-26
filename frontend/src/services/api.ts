@@ -160,6 +160,7 @@ export const findingApi = {
   }) => api.put(`/findings/${id}`, data),
   updateStatus: (id: number, status: string) => api.patch(`/findings/${id}`, { status }),
   delete: (id: number) => api.delete(`/findings/${id}`),
+  deleteAllByFile: (fileId: number) => api.delete(`/findings/files/${fileId}/all`),
 };
 
 // API service for code snippets

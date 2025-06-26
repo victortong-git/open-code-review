@@ -174,6 +174,57 @@ export const deleteFinding = async (req: Request, res: Response, next: NextFunct
   }
 };
 
+// Delete all findings for a specific file
+export const deleteAllFindingsByFileId = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const fileId = parseInt(req.params.id, 10);
+    if (isNaN(fileId)) {
+      res.status(400).json({ message: 'Invalid file ID format.' });
+      return;
+    }
+
+    console.log(`Deleting all findings for file ID: ${fileId}`);
+
+    // Check if the file exists
+    const file = await db.File.findByPk(fileId);
+    if (!file) {
+      console.log(`File with ID ${fileId} not found`);
+      res.status(404).json({ message: `File with id ${fileId} not found.` });
+      return;
+    }
+
+    console.log(`File found: ${file.file_name}`);
+
+    // Count existing findings before deletion
+    const existingFindingsCount = await db.Finding.count({
+      where: {
+        file_id: fileId
+      }
+    });
+
+    console.log(`Found ${existingFindingsCount} findings to delete for file ID: ${fileId}`);
+
+    // Delete all findings associated with the file_id
+    const deletedCount = await db.Finding.destroy({
+      where: {
+        file_id: fileId
+      }
+    });
+
+    console.log(`Successfully deleted ${deletedCount} findings for file ID: ${fileId}`);
+
+    res.status(200).json({
+      message: `Successfully deleted all findings for file: ${file.file_name}`,
+      deletedCount: deletedCount,
+      fileId: fileId,
+      fileName: file.file_name
+    });
+  } catch (error) {
+    console.error(`Error in deleteAllFindingsByFileId for file ID ${req.params.id}:`, error);
+    next(error);
+  }
+};
+
 // Get findings by file ID - Use code snippets to find related findings
 export const getFindingsByFileId = async (req: Request, res: Response, next: NextFunction) => {
   try {

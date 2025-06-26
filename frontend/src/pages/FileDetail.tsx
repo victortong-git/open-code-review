@@ -22,7 +22,7 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { AppDispatch, RootState } from '../store/store';
 import { fetchFileById, updateFileAsync, updateFileMD5Async, markFileProcessedAsync } from '../features/fileSlice';
-import { fetchFindingsByFile, deleteFinding } from '../features/findingSlice';
+import { fetchFindingsByFile, deleteFinding, deleteAllFindingsByFile } from '../features/findingSlice';
 import AnalysisPanel from '../components/AnalysisPanel';
 import type { Finding } from '../features/findingSlice';
 import { useToast } from '../context/ToastContext';
@@ -208,6 +208,30 @@ const FileDetail: React.FC = () => {
         } 
       } 
     });
+  };
+
+  const handleDeleteAllFindings = async () => {
+    if (!fileId || !currentFile) return;
+
+    // Show confirmation dialog
+    const confirmed = window.confirm(
+      `Are you sure you want to delete ALL ${findings.length} findings for "${currentFile.file_name}"?\n\nThis action cannot be undone.`
+    );
+
+    if (!confirmed) return;
+
+    setIsLoading(true);
+    try {
+      const result = await dispatch(deleteAllFindingsByFile(parseInt(fileId))).unwrap();
+      showToast(`Successfully deleted ${result.response.deletedCount} findings for ${currentFile.file_name}`, 'success');
+      
+      // Refresh findings to ensure UI is updated
+      dispatch(fetchFindingsByFile(parseInt(fileId)));
+    } catch (error: any) {
+      showToast(`Failed to delete findings: ${error?.message || 'Unknown error'}`, 'error');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (fileLoading || !currentFile) {
@@ -558,10 +582,22 @@ const FileDetail: React.FC = () => {
         
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-              <ExclamationTriangleIcon className="h-6 w-6 mr-2 text-yellow-500" />
-              Findings List
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
+                <ExclamationTriangleIcon className="h-6 w-6 mr-2 text-yellow-500" />
+                Findings List
+              </h2>
+              {findings.length > 0 && (
+                <button
+                  onClick={handleDeleteAllFindings}
+                  disabled={isLoading}
+                  className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <TrashIcon className="h-4 w-4 mr-1" />
+                  {isLoading ? 'Deleting...' : 'Delete All Findings'}
+                </button>
+              )}
+            </div>
             {findingsLoading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>

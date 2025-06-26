@@ -49,18 +49,18 @@ async def open_code_review_function(
         # Generate timestamp for log files
         timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S_%f")[:-3]
         
-        # Extract file_id and review_type from the input string
-        file_id = None
-        review_type = None
-        
-        # Use regex to extract both fields robustly
-        file_id_match = re.search(r"file_id\s*:\s*([0-9]+)", input_message)
-        review_type_match = re.search(r"review_type\s*:\s*([a-zA-Z0-9_\-]+)", input_message)
-        
-        if file_id_match:
-            file_id = file_id_match.group(1)
-        if review_type_match:
-            review_type = review_type_match.group(1)
+        # Parse the input message as JSON
+        try:
+            input_data = json.loads(input_message)
+            file_id = input_data.get("file_id")
+            review_type = input_data.get("review_type")
+        except json.JSONDecodeError:
+            # Fallback to regex if not a valid JSON (e.g., direct prompt from user)
+            file_id_match = re.search(r"file_id\s*:\s*([0-9]+)", input_message)
+            review_type_match = re.search(r"review_type\s*:\s*([a-zA-Z0-9_\-]+)", input_message)
+            
+            file_id = file_id_match.group(1) if file_id_match else None
+            review_type = review_type_match.group(1) if review_type_match else None
 
         # Log the input and extracted parameters
         with open(os.path.join(TMP_DIR, f'{timestamp}_input.txt'), 'w') as f:

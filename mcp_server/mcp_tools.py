@@ -233,7 +233,7 @@ async def analyze_code(file_id: str, review_type: str):
         llm_payload = {"messages": [{"role": "user", "content": ai_prompt_message}], "max_tokens": 1000, "temperature": 0.7}
         
         logger.info(f"Sending payload to aiqtoolkit: {json.dumps(llm_payload)}")
-        llm_response = requests.post(llm_api_url, json=llm_payload, timeout=120) # Increased timeout
+        llm_response = requests.post(llm_api_url, json=llm_payload, timeout=300) # Increased timeout to 300 seconds
         llm_response.raise_for_status() # Raise an exception for HTTP errors
         
         response_text = llm_response.text

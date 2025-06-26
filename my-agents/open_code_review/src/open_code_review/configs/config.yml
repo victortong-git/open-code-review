@@ -15,12 +15,12 @@ general:
 llms:
   openai_executor:
     _type: openai
-    model_name: gpt-4o-mini
+    model_name: gpt-4.1-nano
     temperature: 0.0
     max_tokens: 20480
   openai_alternative:
     _type: openai
-    model_name: gpt-4-turbo
+    model_name: gpt-4.1-mini
     temperature: 0.0
     max_tokens: 16384
 

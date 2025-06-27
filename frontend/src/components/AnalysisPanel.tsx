@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '../store/store';
 import { getAnalysisStatus, getAnalysisResults, triggerComprehensiveReview } from '../features/analysisSlice';
@@ -42,6 +42,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
       status: 'pending'
     }))
   );
+  const [hasAnalysisCompleted, setHasAnalysisCompleted] = useState(false);
   
   // Get analysis status from Redux store
   const analysisStatus = useSelector((state: RootState) => 
@@ -81,6 +82,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
       reviewType: cat.id,
       status: 'pending'
     })));
+    setHasAnalysisCompleted(false);
     
     try {
       const resultAction = await dispatch(triggerComprehensiveReview(fileId));
@@ -117,7 +119,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
   // Update review progress when analysis status updates
   useEffect(() => {
     // Handle completion first - this takes priority
-    if (analysisStatus.status === 'completed' && isComprehensiveReview) {
+    if (analysisStatus.status === 'completed' && isComprehensiveReview && !hasAnalysisCompleted) {
       console.log('Analysis completed - marking all reviews as completed');
       setReviewProgress(prev => 
         prev.map(item => ({ ...item, status: 'completed' }))
@@ -141,6 +143,7 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
           detail: { fileId, status: 'completed', progress: 100 } 
         }));
       }
+      setHasAnalysisCompleted(true); // Mark as completed to prevent re-execution
       return; // Exit early - don't process individual progress updates
     }
     
@@ -170,45 +173,27 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
       
       // Update the progress of individual reviews
       setReviewProgress(prev => {
-        return prev.map(item => {
-          // If we have current and total indexes, use those to determine completion
-          if (analysisStatus.currentIndex !== undefined && 
-              analysisStatus.totalReviews !== undefined) {
-            
-            // Get index of this review type (0-based index)
-            const reviewTypes = [
-              'general_review',
-              'owasp_2021_a01',
-              'owasp_2021_a02',
-              'owasp_2021_a03',
-              'owasp_2021_a04',
-              'owasp_2021_a05',
-              'owasp_2021_a06',
-              'owasp_2021_a07',
-              'owasp_2021_a08',
-              'owasp_2021_a09',
-              'owasp_2021_a10'
-            ];
-            
-            const itemIndex = reviewTypes.indexOf(item.reviewType);
-            
-            // currentIndex is 1-based (number of completed reviews)
-            // If this review's 0-based index is less than currentIndex, it's completed
-            if (itemIndex < analysisStatus.currentIndex && item.status !== 'failed') {
-              return { ...item, status: 'completed' };
-            }
-            
-            // If this is the current review being processed, mark as in_progress
-            if (itemIndex === (analysisStatus.currentIndex - 1) && item.status !== 'failed') {
-              return { ...item, status: 'in_progress' };
-            }
+        return prev.map((item, itemIndex) => {
+          const reviewTypes = OWASP_CATEGORIES.map(cat => cat.id);
+          const currentReviewIndexFromBackend = analysisStatus.currentIndex || 0; // This is 1-based
+
+          // If this review's 0-based index is less than the 0-based index of the current review from backend, it's completed
+          if (currentReviewIndexFromBackend > 1 && itemIndex < (currentReviewIndexFromBackend - 1) && item.status !== 'failed') {
+            return { ...item, status: 'completed' };
           }
-          
+          // If this review is the one currently being processed (0-based index matches 1-based current index - 1)
+          else if (currentReviewIndexFromBackend > 0 && itemIndex === (currentReviewIndexFromBackend - 1) && item.status !== 'failed') {
+            return { ...item, status: analysisStatus.reviewStatus || 'in_progress' };
+          }
+          // If this review is the one that just completed (based on currentAnalysisStatus.currentReview)
+          else if (item.reviewType === analysisStatus.currentReview && analysisStatus.reviewStatus === 'completed') {
+            return { ...item, status: 'completed' };
+          }
           return item;
         });
       });
     }
-  }, [analysisStatus, dispatch, fileId, pollingIntervalId, isComprehensiveReview, currentReview]);
+  }, [analysisStatus.status, analysisStatus.currentReview, analysisStatus.jobId, analysisStatus.reviewStatus, analysisStatus.currentIndex, dispatch, fileId, pollingIntervalId, isComprehensiveReview, currentReview]);
   
   // Clean up interval on unmount
   useEffect(() => {

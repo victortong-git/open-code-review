@@ -371,7 +371,9 @@ export class AIQClient {
     for (let i = 0; i < reviewTypes.length; i++) {
       const reviewType = reviewTypes[i];
       try {
+        console.log(`Starting review for: ${reviewType}`);
         const result = await this.performCodeReview(fileId, reviewType);
+        console.log(`Completed review for ${reviewType}. Result:`, result);
         results.push({ 
           type: reviewType, 
           status: 'completed',

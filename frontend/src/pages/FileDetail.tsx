@@ -70,7 +70,9 @@ const FileDetail: React.FC = () => {
   // Remove unused code snippets state since we're focusing on findings now
   const { findings, loading: findingsLoading } = useSelector((state: RootState) => state.findings);
   // Get analysis status to detect when analysis completes
-  const { analysisStatus } = useSelector((state: RootState) => state.analysis);
+  const currentFileAnalysisStatus = useSelector((state: RootState) => 
+    fileId ? state.analysis.analysisStatus[parseInt(fileId)] : undefined
+  );
   
   const [isEditing, setIsEditing] = useState(false);
   const [fileFormData, setFileFormData] = useState({
@@ -100,19 +102,25 @@ const FileDetail: React.FC = () => {
 
   // Watch for analysis status changes to refresh file info when analysis completes
   useEffect(() => {
-    if (fileId && analysisStatus[parseInt(fileId)]?.status === 'completed') {
-      // Refresh file info to get any updates after analysis
-      dispatch(fetchFileById(parseInt(fileId)));
+    if (fileId && currentFileAnalysisStatus?.status === 'completed') {
+      // Add a small delay to avoid race conditions and multiple rapid refreshes
+      const timeoutId = setTimeout(() => {
+        dispatch(fetchFileById(parseInt(fileId)));
+      }, 1000);
+      
+      return () => clearTimeout(timeoutId);
     }
-  }, [fileId, analysisStatus, dispatch]);
+  }, [fileId, currentFileAnalysisStatus?.status, dispatch]);
 
   // Listen for analysis completion events from AnalysisPanel
   useEffect(() => {
     const handleAnalysisCompleted = (event: CustomEvent) => {
       if (fileId && event.detail.fileId === parseInt(fileId)) {
-        // Refresh findings and file data
-        dispatch(fetchFindingsByFile(parseInt(fileId)));
-        dispatch(fetchFileById(parseInt(fileId)));
+        // Refresh findings and file data with a slight delay to avoid conflicts
+        setTimeout(() => {
+          dispatch(fetchFindingsByFile(parseInt(fileId)));
+          // Don't fetch file data here since it's already handled in the other useEffect
+        }, 500);
       }
     };
 
@@ -234,10 +242,22 @@ const FileDetail: React.FC = () => {
     }
   };
 
-  if (fileLoading || !currentFile) {
+  // Only show full page loading on initial load, not during analysis updates
+  if (fileLoading && !currentFile) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // If we don't have currentFile and not loading, show error
+  if (!currentFile) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <p className="text-gray-500 dark:text-gray-400">File not found</p>
+        </div>
       </div>
     );
   }
@@ -260,6 +280,9 @@ const FileDetail: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center">
               <DocumentTextIcon className="h-8 w-8 mr-2 text-blue-500" />
               {currentFile.file_name}
+              {fileLoading && (
+                <div className="ml-2 animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-blue-500"></div>
+              )}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {currentFile.file_path}

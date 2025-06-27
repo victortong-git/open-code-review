@@ -127,8 +127,8 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
       
       if (pollingIntervalId) {
         stopStatusPolling();
-        setIsAnalyzing(false);
       }
+      setIsAnalyzing(false);
       
       // If completed, fetch results and dispatch event
       if (analysisStatus.jobId) {
@@ -148,8 +148,10 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
     }
     
     // Handle failure
-    if (analysisStatus.status === 'failed' && pollingIntervalId) {
-      stopStatusPolling();
+    if (analysisStatus.status === 'failed') {
+      if (pollingIntervalId) {
+        stopStatusPolling();
+      }
       setIsAnalyzing(false);
       
       // Mark the current review as failed
@@ -195,6 +197,13 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
     }
   }, [analysisStatus.status, analysisStatus.currentReview, analysisStatus.jobId, analysisStatus.reviewStatus, analysisStatus.currentIndex, dispatch, fileId, pollingIntervalId, isComprehensiveReview, currentReview]);
   
+  // Safety check: ensure isAnalyzing is reset when analysis completes or fails
+  useEffect(() => {
+    if (analysisStatus.status === 'completed' || analysisStatus.status === 'failed') {
+      setIsAnalyzing(false);
+    }
+  }, [analysisStatus.status]);
+  
   // Clean up interval on unmount
   useEffect(() => {
     return () => {
@@ -211,6 +220,11 @@ const AnalysisPanel: React.FC<AnalysisPanelProps> = ({ fileId }) => {
   
   // Get the name of the current review
   const getCurrentReviewName = () => {
+    // If analysis is completed, show the last category (A10)
+    if (analysisStatus.status === 'completed') {
+      return OWASP_CATEGORIES[OWASP_CATEGORIES.length - 1].name;
+    }
+    
     const category = OWASP_CATEGORIES.find(cat => cat.id === currentReview);
     return category ? category.name : 'Code Analysis';
   };

@@ -34,9 +34,9 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // Apply rate limiting to all requests
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again after 15 minutes',
+  windowMs: 10 * 60 * 1000, // 10 minutes (reduced from 15)
+  max: 2000, // Limit each IP to 2000 requests per windowMs (increased from 100)
+  message: 'Too many requests from this IP, please try again after 10 minutes',
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });

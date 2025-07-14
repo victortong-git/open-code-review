@@ -191,3 +191,86 @@ This can help you to have a better code review results.
 - build.nvidia.com has rate limit on API usage. OpenCodeReview uses multiple AI query to API. You may get 429 error. If that is the case, I would like to recommend you to use OpenAI API for testing.
 - This repo will be frozen until the NVIDIA Hackathon results announcement on 17 Jun 2025. (Updated resumed.)
 - This repo has been updated to use updated setup script.
+
+## 2025 July Update
+
+### Major New Features
+
+#### 🤖 Local LLM Support with Ollama
+OpenCodeReview now supports **Local LLM deployment** through Ollama integration, enabling you to run AI code analysis entirely on your own infrastructure without external API dependencies.
+
+**Key Benefits:**
+- **Complete Privacy**: No data leaves your network
+- **Cost Control**: No per-token API charges
+- **Custom Models**: Use any Ollama-supported model
+- **Offline Operation**: Works without internet connectivity
+
+**Supported LLM Providers:**
+- **OpenAI**: Cloud-based GPT models (gpt-4o, gpt-4o-mini)
+- **NVIDIA**: NIM models via NVIDIA's API (meta/llama-3.1-8b-instruct)
+- **Ollama**: Local models (gemma3:4b, llama3.1, codellama, etc.)
+
+**Configuration Example:**
+```bash
+# Local Ollama Setup
+LLM_PROVIDER=ollama
+OLLAMA_URL=http://192.168.1.100
+OLLAMA_PORT=11434
+OLLAMA_MODEL=gemma3:4b
+OLLAMA_API_KEY=EMPTY
+```
+
+#### 🔍 AI QA Review for Finding Validation
+New **AI QA Review** functionality that uses AI as a Senior IT Security Consultant to perform quality assurance on security findings, significantly reducing false positives.
+
+**AI QA Review Features:**
+- **Automated False Positive Detection**: AI analyzes findings against actual source code
+- **Expert-Level Analysis**: Uses security consultant-level prompts and reasoning
+- **Status Validation**: Automatically updates finding status (confirmed, false_positive, needs_review)
+- **Detailed Reasoning**: Stores AI's analysis and reasoning for each review
+- **One-Click Review**: Simple button in FindingDetail page with real-time processing
+
+**QA Review Process:**
+1. AI examines the security finding details
+2. Compares against actual source code context
+3. Provides confidence assessment (high/medium/low)
+4. Delivers professional recommendation with detailed analysis
+5. Updates finding status and stores reasoning
+
+#### 📊 Selective Code Review Approach
+Enhanced code analysis workflow with **Selective Review** capability, allowing users to choose specific security review types instead of running comprehensive analysis.
+
+**Review Options:**
+- **Comprehensive Review**: All OWASP 2021 Top 10 categories (default)
+- **Selective Review**: User-defined review types for targeted analysis
+
+**Selective Review Benefits:**
+- **Faster Analysis**: Focus on specific vulnerability categories
+- **Resource Efficiency**: Reduced computation time and API costs
+- **Targeted Assessment**: Choose relevant security categories for your context
+- **Flexible Workflow**: Mix and match review types as needed
+
+**Available Review Categories:**
+- A01:2021 – Broken Access Control
+- A02:2021 – Cryptographic Failures
+- A03:2021 – Injection
+- A04:2021 – Insecure Design
+- A05:2021 – Security Misconfiguration
+- A06:2021 – Vulnerable and Outdated Components
+- A07:2021 – Identification and Authentication Failures
+- A08:2021 – Software and Data Integrity Failures
+- A09:2021 – Security Logging and Monitoring Failures
+- A10:2021 – Server-Side Request Forgery (SSRF)
+- General Security Review
+
+### Enhanced User Experience
+- **Real-time Progress Tracking**: Live updates during AI analysis
+- **Improved Error Handling**: Better feedback and recovery mechanisms
+- **Enhanced WebSocket Integration**: Reliable real-time communication
+- **Streamlined UI/UX**: More intuitive workflow for code review process
+
+### Technical Improvements
+- **Multi-Provider LLM Architecture**: Flexible executor pattern for different AI providers
+- **Database Schema Enhancements**: Added QA review fields and improved finding management
+- **Enhanced Logging**: Comprehensive analysis tracking and debugging capabilities
+- **Rate Limiting Optimization**: Improved API request management and performance

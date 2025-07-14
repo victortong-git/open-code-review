@@ -96,6 +96,9 @@ function setupJobListeners(jobId: string, fileId: number): void {
  */
 async function saveComprehensiveReviewFindings(jobId: string, results: any[], fileId: number): Promise<void> {
   try {
+    console.log(`[saveComprehensiveReviewFindings] Starting to save findings for job ${jobId}, file ${fileId}`);
+    console.log(`[saveComprehensiveReviewFindings] Results structure:`, JSON.stringify(results, null, 2));
+    
     // Start a transaction
     const transaction = await db.transaction();
     
@@ -108,42 +111,101 @@ async function saveComprehensiveReviewFindings(jobId: string, results: any[], fi
         return;
       }
       
+      console.log(`[saveComprehensiveReviewFindings] Found file: ${file.file_name}`);
+      
       // Process findings from all review types
       for (const review of results) {
-        if (review.status === 'completed' && review.result.findings) {
-          for (const finding of review.result.findings) {
+        console.log(`[saveComprehensiveReviewFindings] Processing review:`, review.type, 'Status:', review.status);
+        
+        if (review.status === 'completed' && review.result) {
+          // Handle different response structures
+          let findings = [];
+          
+          // Check if findings are nested under result.findings
+          if (review.result.findings && Array.isArray(review.result.findings)) {
+            findings = review.result.findings;
+          }
+          // Check if findings are in result.value.findings (for JSON string responses)
+          else if (review.result.value) {
+            try {
+              const parsedValue = typeof review.result.value === 'string' ? 
+                JSON.parse(review.result.value) : review.result.value;
+              
+              if (parsedValue.findings && Array.isArray(parsedValue.findings)) {
+                findings = parsedValue.findings;
+              } else if (Array.isArray(parsedValue)) {
+                findings = parsedValue;
+              }
+            } catch (parseError) {
+              console.error(`[saveComprehensiveReviewFindings] Error parsing result.value:`, parseError);
+            }
+          }
+          // Check if findings are directly in result
+          else if (Array.isArray(review.result)) {
+            findings = review.result;
+          }
+          
+          console.log(`[saveComprehensiveReviewFindings] Found ${findings.length} findings for review type: ${review.type}`);
+          
+          for (const finding of findings) {
+            console.log(`[saveComprehensiveReviewFindings] Processing finding:`, finding);
+            
+            // Handle recommendation field (could be array or string)
+            let recommendationText = '';
+            if (Array.isArray(finding.recommendation)) {
+              recommendationText = finding.recommendation.join(', ');
+            } else if (typeof finding.recommendation === 'string') {
+              recommendationText = finding.recommendation;
+            }
+            
             // Create the finding in the database
-            const newFinding = await Finding.create({
+            const findingData = {
               file_id: fileId,
-              type: review.type.startsWith('owasp') ? review.type : 'general',
+              type: finding.type || (review.type.startsWith('owasp') ? review.type : 'Security Vulnerability'),
               description: finding.description || `Finding from ${review.type}: ${finding.title || 'No title provided'}`,
               severity: finding.severity || 'medium',
-              status: 'open',
-              line_number: finding.line_start || 0,
-              recommendation: finding.recommendation || '',
-              code_content: finding.code || '',
+              status: finding.status || 'new',
+              line_number: finding.line_number || 0,
+              recommendation: recommendationText,
+              code_content: finding.code_content || '',
+              md5: file.md5,
               createdAt: new Date(),
               updatedAt: new Date()
-            }, { transaction });
+            };
+            
+            console.log(`[saveComprehensiveReviewFindings] Creating finding with data:`, findingData);
+            
+            const newFinding = await Finding.create(findingData, { transaction });
+            
+            console.log(`[saveComprehensiveReviewFindings] Successfully created finding with ID: ${newFinding.id}`);
             
             // Create code snippet if available
-            if (finding.code) {
+            if (finding.code_content || finding.code) {
+              const codeContent = finding.code_content || finding.code || '';
+              const startLine = finding.line_number || finding.line_start || 0;
+              const endLine = finding.line_end || startLine;
+              
               await CodeSnippet.create({
                 file_id: fileId,
-                code: finding.code || '',
-                start_line: finding.line_start || 0,
-                end_line: finding.line_end || 0,
+                code: codeContent,
+                start_line: startLine,
+                end_line: endLine,
                 description: `Associated with finding ID: ${newFinding.id}`,
                 createdAt: new Date(),
                 updatedAt: new Date()
               }, { transaction });
+              
+              console.log(`[saveComprehensiveReviewFindings] Created code snippet for finding ${newFinding.id}`);
             }
           }
+        } else {
+          console.log(`[saveComprehensiveReviewFindings] Skipping review ${review.type} - status: ${review.status}, has result: ${!!review.result}`);
         }
       }
       
       // Commit the transaction
       await transaction.commit();
+      console.log(`[saveComprehensiveReviewFindings] Successfully committed transaction for job ${jobId}`);
       
     } catch (error) {
       // Rollback the transaction on error
@@ -154,6 +216,7 @@ async function saveComprehensiveReviewFindings(jobId: string, results: any[], fi
     
   } catch (error) {
     console.error('Error in saveComprehensiveReviewFindings:', error);
+    throw error;
   }
 }
 
@@ -509,10 +572,39 @@ export const analysisController = {
       // Check if job is complete and tracked locally
       const jobInfo = activeJobs.get(jobId);
       if (jobInfo && jobInfo.status === 'completed') {
+        // Also fetch the saved findings from the database
+        let savedFindings: any[] = [];
+        try {
+          savedFindings = await Finding.findAll({
+            where: { file_id: jobInfo.fileId },
+            order: [['createdAt', 'DESC']],
+            limit: 20 // Get recent findings for this file
+          });
+        } catch (dbError) {
+          console.error('Error fetching saved findings:', dbError);
+        }
+
+        // Include saved findings in the response
+        const enhancedFindings = jobInfo.findings.map((finding: any) => {
+          // If this finding has saved findings, include them
+          if (finding.result && finding.result.saved_findings) {
+            return finding;
+          }
+          
+          // Add saved findings to the finding result
+          return {
+            ...finding,
+            result: {
+              ...finding.result,
+              saved_findings: savedFindings.map(sf => sf.toJSON())
+            }
+          };
+        });
+        
         res.status(200).json({
           jobId,
           fileId: jobInfo.fileId,
-          findings: jobInfo.findings,
+          findings: enhancedFindings,
           startTime: jobInfo.startTime,
           endTime: jobInfo.endTime
         });

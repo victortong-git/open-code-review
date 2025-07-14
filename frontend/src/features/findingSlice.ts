@@ -419,15 +419,34 @@ const findingSlice = createSlice({
         const findingId = action.meta.arg;
         state.qaReviewLoading[findingId] = false;
         const qaResult = action.payload;
+        console.log('Redux performQAReview.fulfilled - qaResult:', qaResult);
+        console.log('Redux performQAReview.fulfilled - currentFinding before update:', state.currentFinding);
         // Update the finding with QA results if finding data is included
         if (qaResult.finding) {
           const updatedFinding = qaResult.finding as Finding;
+          console.log('Redux performQAReview.fulfilled - updatedFinding from API:', updatedFinding);
           const findingIndex = state.findings.findIndex(finding => finding.id === updatedFinding.id);
           if (findingIndex !== -1) {
             state.findings[findingIndex] = updatedFinding;
           }
           if (state.currentFinding && state.currentFinding.id === updatedFinding.id) {
             state.currentFinding = updatedFinding;
+            console.log('Redux performQAReview.fulfilled - currentFinding after update:', state.currentFinding);
+          }
+        } else {
+          console.log('Redux performQAReview.fulfilled - No finding in qaResult, checking if finding is at top level');
+          // Maybe the finding is at the top level of the response
+          if (qaResult.id) {
+            console.log('Redux performQAReview.fulfilled - Found finding at top level:', qaResult);
+            const updatedFinding = qaResult as Finding;
+            const findingIndex = state.findings.findIndex(finding => finding.id === updatedFinding.id);
+            if (findingIndex !== -1) {
+              state.findings[findingIndex] = updatedFinding;
+            }
+            if (state.currentFinding && state.currentFinding.id === updatedFinding.id) {
+              state.currentFinding = updatedFinding;
+              console.log('Redux performQAReview.fulfilled - currentFinding updated from top level:', state.currentFinding);
+            }
           }
         }
       })

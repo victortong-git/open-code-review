@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import api from '../services/api';
 import type { AppDispatch, RootState } from '../store/store';
-import { performQAReview, setCurrentFinding, clearCurrentFinding } from '../features/findingSlice';
+import { performQAReview, fetchFindingById, clearCurrentFinding } from '../features/findingSlice';
 import { useToast } from '../context/ToastContext';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -56,77 +55,72 @@ interface FileInfo {
   md5: string | null;
 }
 
-interface Finding {
+// Extended Finding interface to include the nested file object that comes from API responses
+interface ExtendedFinding {
   id: number;
   type: string;
   description: string;
   severity: string;
   severity_reason?: string;
   status: string;
-  file_id?: number; // Keep file_id for direct access if needed, though file object is preferred
+  file_id?: number;
   line_number: number | null;
   code_content: string;
   recommendation: string;
-  md5?: string | null; // Keep top-level md5 for backward compatibility if needed
-  qa_review_reason?: string; // Add QA review reason field
+  md5?: string | null;
+  qa_review_reason?: string;
   createdAt?: string;
   updatedAt?: string;
-  file?: FileInfo; // Add nested file object
+  file?: FileInfo;
 }
+
 
 const FindingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
   const { showToast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [highlightedLines, setHighlightedLines] = useState<number[]>([]);
-  const [refreshKey, setRefreshKey] = useState(0);
   
-  // Get finding and QA review loading state from Redux
-  const { currentFinding, qaReviewLoading } = useSelector((state: RootState) => state.findings);
-  const finding = currentFinding;
+  // Get finding, loading state, and QA review loading state from Redux
+  const { currentFinding, loading, error, qaReviewLoading } = useSelector((state: RootState) => state.findings);
+  const finding = currentFinding as ExtendedFinding | null;
+
+  // Debug logging
+  console.log('FindingDetail - Current finding from Redux:', finding);
+  console.log('FindingDetail - Loading state:', loading);
+  console.log('FindingDetail - QA Review loading:', qaReviewLoading);
 
   useEffect(() => {
-    const fetchFinding = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/findings/${id}`);
-        dispatch(setCurrentFinding(response.data));
-        
-        // Find all lines with "<--- issue" for highlighting
-        if (response.data.code_content) {
-          const lines = response.data.code_content.split('\n');
-          const issueLines: number[] = [];
-          lines.forEach((line: string, index: number) => {
-            if (line.includes('<--- issue')) {
-              issueLines.push(index + 1); // +1 because line numbers are 1-based
-            }
-          });
-          
-          if (issueLines.length > 0) {
-            setHighlightedLines(issueLines);
-          } else if (response.data.line_number) {
-            setHighlightedLines([response.data.line_number]);
-          }
-        }
-        
-        setError(null);
-      } catch (error) {
-        console.error('Error fetching finding:', error);
-        setError('Failed to load finding details. Please try again later.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFinding();
+    if (id) {
+      dispatch(fetchFindingById(parseInt(id)));
+    }
     
     // Clear current finding when component unmounts
     return () => {
       dispatch(clearCurrentFinding());
     };
   }, [id, dispatch]);
+
+  // Update highlighted lines when finding data changes
+  useEffect(() => {
+    console.log('FindingDetail - finding data changed, updating highlighted lines:', finding);
+    if (finding?.code_content) {
+      const lines = finding.code_content.split('\n');
+      const issueLines: number[] = [];
+      lines.forEach((line: string, index: number) => {
+        if (line.includes('<--- issue')) {
+          issueLines.push(index + 1); // +1 because line numbers are 1-based
+        }
+      });
+      
+      if (issueLines.length > 0) {
+        setHighlightedLines(issueLines);
+      } else if (finding.line_number) {
+        setHighlightedLines([finding.line_number]);
+      }
+    }
+  }, [finding]);
 
   const handleQAReview = async () => {
     if (!finding) return;
@@ -138,41 +132,26 @@ const FindingDetail = () => {
     if (!confirmed) return;
 
     try {
-      await dispatch(performQAReview(finding.id)).unwrap();
+      console.log('Starting QA Review for finding:', finding.id);
+      const result = await dispatch(performQAReview(finding.id)).unwrap();
+      console.log('QA Review result:', result);
       
-      // Always fetch fresh data after QA review completion to ensure UI reflects latest state
-      const response = await api.get(`/findings/${finding.id}`);
-      const updatedFinding = response.data;
-      dispatch(setCurrentFinding(updatedFinding));
-      
-      // Update highlighted lines if code content changed
-      if (updatedFinding.code_content) {
-        const lines = updatedFinding.code_content.split('\n');
-        const issueLines: number[] = [];
-        lines.forEach((line: string, index: number) => {
-          if (line.includes('<--- issue')) {
-            issueLines.push(index + 1);
-          }
-        });
-        
-        if (issueLines.length > 0) {
-          setHighlightedLines(issueLines);
-        } else if (updatedFinding.line_number) {
-          setHighlightedLines([updatedFinding.line_number]);
-        }
-      }
-      
-      // Force component re-render to ensure UI updates
-      setRefreshKey(prev => prev + 1);
+      // Force refresh the finding data to ensure we have the latest state
+      console.log('Refetching finding data after QA review completion');
+      await dispatch(fetchFindingById(finding.id));
       
       // Show appropriate success message based on updated status
-      if (updatedFinding.status === 'false_positive') {
+      // The Redux state will be automatically updated by the thunk
+      if (result.finding?.status === 'false_positive') {
         showToast(`QA Review completed: Finding marked as false positive`, 'success');
+      } else if (result.finding) {
+        showToast(`QA Review completed: Finding status updated to ${result.finding.status}`, 'success');
       } else {
-        showToast(`QA Review completed: Finding status updated to ${updatedFinding.status}`, 'success');
+        showToast(`QA Review completed successfully`, 'success');
       }
-    } catch (error: any) {
-      showToast(`QA Review failed: ${error?.message || 'Unknown error'}`, 'error');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      showToast(`QA Review failed: ${errorMessage}`, 'error');
     }
   };
 
@@ -269,7 +248,7 @@ const FindingDetail = () => {
     return (
       <div className="p-4 bg-red-100 text-red-700 rounded-md shadow">
         <h2 className="text-lg font-semibold mb-2">Error</h2>
-        <p>{error}</p>
+        <p>{typeof error === 'string' ? error : 'Failed to load finding details. Please try again later.'}</p>
       </div>
     );
   }
@@ -284,7 +263,7 @@ const FindingDetail = () => {
   }
 
   return (
-    <div key={refreshKey} className="container mx-auto px-4 py-6">
+    <div className="container mx-auto px-4 py-6">
       <div className="mb-4 flex gap-3">
         <button 
           onClick={() => navigate(-1)} 

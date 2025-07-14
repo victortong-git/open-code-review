@@ -634,6 +634,189 @@ export const analysisController = {
   },
   
   /**
+   * Trigger selective code review for a file (allows user to choose specific review types)
+   */
+  async triggerSelectiveReview(req: Request, res: Response): Promise<void> {
+    const { id } = req.params;
+    const { reviewTypes } = req.body;
+    const fileId = parseInt(id, 10);
+    
+    try {
+      // Validate input
+      if (!reviewTypes || !Array.isArray(reviewTypes) || reviewTypes.length === 0) {
+        res.status(400).json({ error: 'reviewTypes array is required and must not be empty' });
+        return;
+      }
+      
+      // Validate review types
+      const validReviewTypes = [
+        'general_review',
+        'owasp_2021_a01', 'owasp_2021_a02', 'owasp_2021_a03', 'owasp_2021_a04', 'owasp_2021_a05',
+        'owasp_2021_a06', 'owasp_2021_a07', 'owasp_2021_a08', 'owasp_2021_a09', 'owasp_2021_a10'
+      ];
+      
+      const invalidTypes = reviewTypes.filter(type => !validReviewTypes.includes(type));
+      if (invalidTypes.length > 0) {
+        res.status(400).json({ 
+          error: `Invalid review types: ${invalidTypes.join(', ')}`,
+          validTypes: validReviewTypes
+        });
+        return;
+      }
+      
+      // Check if file exists
+      const file = await File.findByPk(fileId);
+      if (!file) {
+        res.status(404).json({ error: 'File not found' });
+        return;
+      }
+      
+      // Generate a unique job ID for tracking
+      const jobId = uuidv4();
+      
+      // Initialize job tracking
+      activeJobs.set(jobId, {
+        fileId,
+        status: 'analyzing',
+        progress: 0,
+        findings: [],
+        startTime: new Date(),
+        currentReview: reviewTypes[0],
+        reviewStatus: 'in_progress',
+        currentIndex: 1,
+        totalReviews: reviewTypes.length
+      });
+      
+      // Return job info immediately for frontend tracking
+      res.status(200).json({
+        jobId,
+        fileId,
+        status: 'analyzing',
+        progress: 0,
+        currentReview: reviewTypes[0],
+        selectedReviewTypes: reviewTypes,
+        totalReviews: reviewTypes.length
+      });
+      
+      // Set up event listeners for this specific job
+      const progressHandler = (data: any) => {
+        if (data.fileId === fileId) {
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.progress = data.progress;
+            jobInfo.currentReview = data.reviewType;
+            jobInfo.currentIndex = data.currentIndex;
+            jobInfo.reviewStatus = data.reviewStatus;
+            activeJobs.set(jobId, jobInfo);
+            
+            // Broadcast progress update via WebSocket
+            broadcastWebSocketMessage({
+              type: 'analysis_progress',
+              fileId: fileId,
+              jobId: jobId,
+              progress: data.progress,
+              currentReview: data.reviewType,
+              reviewStatus: data.reviewStatus,
+              currentIndex: data.currentIndex,
+              totalReviews: data.totalReviews
+            });
+          }
+        }
+      };
+
+      const errorHandler = (data: any) => {
+        if (data.fileId === fileId) {
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.currentReview = data.reviewType;
+            jobInfo.reviewStatus = data.reviewStatus;
+            activeJobs.set(jobId, jobInfo);
+            
+            // Broadcast error update via WebSocket
+            broadcastWebSocketMessage({
+              type: 'review_error',
+              fileId: fileId,
+              jobId: jobId,
+              reviewType: data.reviewType,
+              reviewStatus: data.reviewStatus,
+              error: data.error
+            });
+          }
+        }
+      };
+
+      // Add listeners
+      aiqClient.on('review_progress', progressHandler);
+      aiqClient.on('review_error', errorHandler);
+      
+      // Start selective review asynchronously
+      (async () => {
+        try {
+          const results = await aiqClient.performSelectiveReview(fileId, reviewTypes);
+
+          // Save the findings to the database
+          await saveComprehensiveReviewFindings(jobId, results.results, fileId);
+
+          // Mark job as completed
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.status = 'completed';
+            jobInfo.progress = 100;
+            jobInfo.endTime = new Date();
+            jobInfo.findings = results.results;
+            activeJobs.set(jobId, jobInfo);
+          }
+          
+          // Broadcast completion via WebSocket
+          broadcastWebSocketMessage({
+            type: 'analysis_complete',
+            fileId: fileId,
+            jobId: jobId,
+            status: 'completed',
+            progress: 100,
+            results: results.results,
+            selectedReviewTypes: reviewTypes
+          });
+          
+          console.log(`Selective review completed for file ID: ${fileId}, job ID: ${jobId}, review types: ${reviewTypes.join(', ')}`);
+        } catch (error) {
+          console.error(`Error in selective review for job ${jobId}:`, error);
+          
+          // Mark job as failed
+          const jobInfo = activeJobs.get(jobId);
+          if (jobInfo) {
+            jobInfo.status = 'failed';
+            jobInfo.endTime = new Date();
+            activeJobs.set(jobId, jobInfo);
+          }
+          
+          // Broadcast failure via WebSocket
+          broadcastWebSocketMessage({
+            type: 'analysis_error',
+            fileId: fileId,
+            jobId: jobId,
+            status: 'failed',
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        } finally {
+          // Clean up event listeners
+          aiqClient.off('review_progress', progressHandler);
+          aiqClient.off('review_error', errorHandler);
+        }
+      })();
+      
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('Error triggering selective review:', error.message);
+        res.status(500).json({ error: error.message });
+      } else {
+        console.error('Unknown error triggering selective review:', error);
+        res.status(500).json({ error: 'An unknown error occurred' });
+      }
+    }
+  },
+
+  /**
    * Proxy requests to the AI code analysis service
    */
   async proxyAICodeReview(req: Request, res: Response): Promise<void> {

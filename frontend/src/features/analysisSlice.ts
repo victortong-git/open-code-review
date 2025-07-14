@@ -119,6 +119,41 @@ export const triggerComprehensiveReview = createAsyncThunk(
   }
 );
 
+export const triggerSelectiveReview = createAsyncThunk(
+  'analysis/triggerSelectiveReview',
+  async ({ fileId, reviewTypes }: { fileId: number; reviewTypes: string[] }, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`/analysis/files/${fileId}/selective-review`, {
+        reviewTypes
+      });
+      const { jobId, status, progress, selectedReviewTypes, totalReviews } = response.data;
+      
+      return { 
+        fileId, 
+        jobId,
+        status: status || 'analyzing', 
+        progress: progress || 0,
+        currentReview: reviewTypes[0], // Start with first selected review
+        selectedReviewTypes,
+        totalReviews
+      };
+    } catch (error: any) {
+      console.error('Error in selective review:', error);
+      let message = 'Failed to start selective review.';
+      if (error.response) {
+        const errorData = error.response.data;
+        const errorStatus = error.response.status;
+        message = `API Error: Server responded with status ${errorStatus}.`;
+        if (errorData?.detail || errorData?.error) message += ` ${errorData.detail || errorData.error}`;
+        else if (error.message) message += ` ${error.message}`;
+      } else {
+        message = `Failed to connect to analysis service: ${error.message}`;
+      }
+      return rejectWithValue({ fileId, message });
+    }
+  }
+);
+
 export const triggerAssessment = createAsyncThunk(
   'analysis/triggerAssessment',
   async (fileId: number) => {
@@ -360,6 +395,40 @@ const analysisSlice = createSlice({
       .addCase(triggerComprehensiveReview.rejected, (state, action: PayloadAction<any>) => {
         state.loading = false;
         state.error = action.payload?.message || 'Failed to start comprehensive review';
+        
+        // Update the status for this file to show the failure
+        const fileId = action.payload?.fileId;
+        if (fileId) {
+          state.analysisStatus[fileId] = { 
+            fileId, 
+            status: 'failed',
+            progress: 0
+          };
+        }
+      })
+      // triggerSelectiveReview
+      .addCase(triggerSelectiveReview.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(triggerSelectiveReview.fulfilled, (state, action) => {
+        const { fileId, jobId, status, progress, currentReview, totalReviews } = action.payload;
+        state.loading = false;
+        
+        // Create or update the status for this file
+        state.analysisStatus[fileId] = { 
+          fileId, 
+          jobId, 
+          status: status as any, 
+          progress,
+          currentReview,
+          reviewStatus: 'in_progress',
+          totalReviews
+        };
+      })
+      .addCase(triggerSelectiveReview.rejected, (state, action: PayloadAction<any>) => {
+        state.loading = false;
+        state.error = action.payload?.message || 'Failed to start selective review';
         
         // Update the status for this file to show the failure
         const fileId = action.payload?.fileId;

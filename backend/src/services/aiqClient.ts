@@ -345,35 +345,34 @@ export class AIQClient {
   }
   
   /**
-   * Performs a comprehensive code review including general review and all OWASP 2021 categories
+   * Performs a selective code review with user-specified review types
    * @param fileId Database ID of the file
+   * @param selectedReviewTypes Array of review types to perform
    * @param onProgress Callback function for progress updates
-   * @returns Results of the comprehensive review
+   * @returns Results of the selective review
    */
-  async performComprehensiveReview(fileId: number, onProgress?: (progress: number, currentReview: string) => void): Promise<any> {
-    const reviewTypes = [
+  async performSelectiveReview(fileId: number, selectedReviewTypes: string[], onProgress?: (progress: number, currentReview: string) => void): Promise<any> {
+    // Validate review types
+    const validReviewTypes = [
       'general_review',
-      'owasp_2021_a01',
-      'owasp_2021_a02',
-      'owasp_2021_a03',
-      'owasp_2021_a04',
-      'owasp_2021_a05',
-      'owasp_2021_a06',
-      'owasp_2021_a07',
-      'owasp_2021_a08',
-      'owasp_2021_a09',
-      'owasp_2021_a10'
+      'owasp_2021_a01', 'owasp_2021_a02', 'owasp_2021_a03', 'owasp_2021_a04', 'owasp_2021_a05',
+      'owasp_2021_a06', 'owasp_2021_a07', 'owasp_2021_a08', 'owasp_2021_a09', 'owasp_2021_a10'
     ];
     
-    const totalReviews = reviewTypes.length;
+    const invalidTypes = selectedReviewTypes.filter(type => !validReviewTypes.includes(type));
+    if (invalidTypes.length > 0) {
+      throw new Error(`Invalid review types: ${invalidTypes.join(', ')}`);
+    }
+    
+    const totalReviews = selectedReviewTypes.length;
     const results: any[] = [];
     
-    for (let i = 0; i < reviewTypes.length; i++) {
-      const reviewType = reviewTypes[i];
+    for (let i = 0; i < selectedReviewTypes.length; i++) {
+      const reviewType = selectedReviewTypes[i];
       try {
-        console.log(`Starting review for: ${reviewType}`);
+        console.log(`Starting selective review for: ${reviewType}`);
         const result = await this.performCodeReview(fileId, reviewType);
-        console.log(`Completed review for ${reviewType}. Result:`, result);
+        console.log(`Completed selective review for ${reviewType}. Result:`, result);
         results.push({ 
           type: reviewType, 
           status: 'completed',
@@ -393,7 +392,6 @@ export class AIQClient {
           progress,
           currentIndex: i + 1,
           totalReviews,
-          // Add status specifically for this review type
           reviewStatus: 'completed'
         });
         
@@ -436,6 +434,31 @@ export class AIQClient {
       failedReviews: results.filter(r => r.status === 'failed').length,
       results
     };
+  }
+
+  /**
+   * Performs a comprehensive code review including general review and all OWASP 2021 categories
+   * @param fileId Database ID of the file
+   * @param onProgress Callback function for progress updates
+   * @returns Results of the comprehensive review
+   */
+  async performComprehensiveReview(fileId: number, onProgress?: (progress: number, currentReview: string) => void): Promise<any> {
+    const reviewTypes = [
+      'general_review',
+      'owasp_2021_a01',
+      'owasp_2021_a02',
+      'owasp_2021_a03',
+      'owasp_2021_a04',
+      'owasp_2021_a05',
+      'owasp_2021_a06',
+      'owasp_2021_a07',
+      'owasp_2021_a08',
+      'owasp_2021_a09',
+      'owasp_2021_a10'
+    ];
+    
+    // Use the selective review method with all review types
+    return this.performSelectiveReview(fileId, reviewTypes, onProgress);
   }
 }
 

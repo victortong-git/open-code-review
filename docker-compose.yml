@@ -83,6 +83,17 @@ services:
       - PYTHONPATH=/workspace:/workspace/src
       - NVIDIA_API_KEY=${NVIDIA_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - LLM_PROVIDER=${LLM_PROVIDER}
+      - OPENAI_MODEL=${OPENAI_MODEL}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL}
+      - NVIDIA_MODEL=${NVIDIA_MODEL}
+      - NVIDIA_BASE_URL=${NVIDIA_BASE_URL}
+      - OLLAMA_URL=${OLLAMA_URL}
+      - OLLAMA_PORT=${OLLAMA_PORT}
+      - OLLAMA_MODEL=${OLLAMA_MODEL}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - LLM_MAX_TOKENS=${LLM_MAX_TOKENS}
+      - LLM_TEMPERATURE=${LLM_TEMPERATURE}
     ports:
       - "8000:8000"
     command: ["bash", "-c", "cd /workspace && source .venv/bin/activate && aiq serve --config_file=my-agents/open_code_review/configs/config.yml --port 8000 --host 0.0.0.0"]

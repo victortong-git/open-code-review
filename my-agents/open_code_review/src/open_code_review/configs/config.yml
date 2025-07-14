@@ -15,9 +15,25 @@ general:
 llms:
   openai_executor:
     _type: openai
-    model_name: gpt-4.1-nano
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "${OPENAI_BASE_URL}"
+    model_name: "${OPENAI_MODEL}"
     temperature: 0.0
-    max_tokens: 20480
+    max_tokens: 4096
+  nvidia_executor:
+    _type: openai
+    api_key: "${NVIDIA_API_KEY}"
+    base_url: "${NVIDIA_BASE_URL}"
+    model_name: "${NVIDIA_MODEL}"
+    temperature: 0.0
+    max_tokens: 4096
+  ollama_executor:
+    _type: openai
+    api_key: "${OLLAMA_API_KEY}"
+    base_url: "${OLLAMA_URL}:${OLLAMA_PORT}/v1"
+    model_name: "${OLLAMA_MODEL}"
+    temperature: 0.0
+    max_tokens: 4096
   openai_alternative:
     _type: openai
     model_name: gpt-4.1-mini
@@ -26,4 +42,4 @@ llms:
 
 workflow:
   _type: open_code_review
-  llm: openai_executor
+  llm: "${LLM_PROVIDER}_executor"

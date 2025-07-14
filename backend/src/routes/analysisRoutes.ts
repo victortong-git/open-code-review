@@ -12,6 +12,9 @@ router.post('/files/:id/assessment', analysisController.triggerAssessment);
 // Trigger comprehensive code review including all OWASP categories
 router.post('/files/:id/comprehensive-review', analysisController.triggerComprehensiveReview);
 
+// Trigger selective code review with user-chosen review types
+router.post('/files/:id/selective-review', analysisController.triggerSelectiveReview);
+
 // Get security metrics for a project
 router.get('/projects/:id/metrics', analysisController.getProjectSecurityMetrics);
 

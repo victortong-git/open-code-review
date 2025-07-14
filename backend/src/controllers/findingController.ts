@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../models';
 import { Op } from 'sequelize';
+import aiqClient from '../services/aiqClient';
 
 // Get all findings
 export const getAllFindings = async (req: Request, res: Response, next: NextFunction) => {
@@ -120,7 +121,8 @@ export const updateFinding = async (req: Request, res: Response, next: NextFunct
       line_number,
       code_content,
       md5,
-      recommendation
+      recommendation,
+      qa_review_reason // Added qa_review_reason field
     } = req.body;
 
     const finding = await db.Finding.findByPk(id);
@@ -137,6 +139,7 @@ export const updateFinding = async (req: Request, res: Response, next: NextFunct
     if (code_content !== undefined) finding.code_content = code_content;
     if (md5 !== undefined) finding.md5 = md5;
     if (recommendation !== undefined) finding.recommendation = recommendation;
+    if (qa_review_reason !== undefined) finding.qa_review_reason = qa_review_reason; // Added qa_review_reason field
     if (line_number !== undefined) {
       const ln = parseInt(line_number, 10);
       finding.line_number = isNaN(ln) ? undefined : ln;
@@ -466,6 +469,73 @@ export const getFindingsTrendsByProjectId = async (req: Request, res: Response, 
     res.status(200).json(trendData);
   } catch (error) {
     console.error(`Error in getFindingsTrendsByProjectId for project ID ${req.params.id}:`, error);
+    next(error);
+  }
+};
+
+// Perform QA review of a finding
+export const performQAReview = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      res.status(400).json({ message: 'Invalid finding ID format.' });
+      return;
+    }
+
+    console.log(`Starting QA review for finding ID: ${id}`);
+
+    // Check if the finding exists
+    const finding = await db.Finding.findByPk(id, {
+      include: [{
+        model: db.File,
+        as: 'file',
+        attributes: ['id', 'file_name', 'md5']
+      }]
+    });
+
+    if (!finding) {
+      res.status(404).json({ message: 'Finding not found' });
+      return;
+    }
+
+    console.log(`Found finding: ${finding.type} - ${finding.description}`);
+
+    try {
+      // Call the QA review agent
+      const qaResult = await aiqClient.performQAReview(id);
+      console.log('QA Review completed, result:', qaResult);
+
+      // Process the QA result and update the finding if needed
+      if (qaResult && qaResult.status && qaResult.reason) {
+        // Update the finding status and QA review reason
+        finding.status = qaResult.status;
+        finding.qa_review_reason = qaResult.reason;
+        await finding.save();
+
+        console.log(`Updated finding status to: ${qaResult.status} with reason: ${qaResult.reason}`);
+
+        res.status(200).json({
+          message: 'QA review completed successfully',
+          finding: finding,
+          qaResult: qaResult
+        });
+      } else {
+        // QA review completed but didn't provide status update
+        res.status(200).json({
+          message: 'QA review completed',
+          finding: finding,
+          qaResult: qaResult
+        });
+      }
+    } catch (qaError) {
+      console.error('Error during QA review:', qaError);
+      res.status(500).json({ 
+        message: 'QA review failed', 
+        error: qaError instanceof Error ? qaError.message : 'Unknown error'
+      });
+    }
+  } catch (error) {
+    console.error(`Error in performQAReview for finding ID ${req.params.id}:`, error);
     next(error);
   }
 };

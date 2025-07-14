@@ -15,14 +15,15 @@ import {
   ClockIcon,
   IdentificationIcon,
   EyeIcon,
-  TrashIcon
+  TrashIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import { SparklesIcon } from '@heroicons/react/24/solid';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { AppDispatch, RootState } from '../store/store';
 import { fetchFileById, updateFileAsync, updateFileMD5Async, markFileProcessedAsync } from '../features/fileSlice';
-import { fetchFindingsByFile, deleteFinding, deleteAllFindingsByFile } from '../features/findingSlice';
+import { fetchFindingsByFile, deleteFinding, deleteAllFindingsByFile, performQAReview } from '../features/findingSlice';
 import AnalysisPanel from '../components/AnalysisPanel';
 import type { Finding } from '../features/findingSlice';
 import { useToast } from '../context/ToastContext';
@@ -68,7 +69,7 @@ const FileDetail: React.FC = () => {
   
   const { currentFile, loading: fileLoading } = useSelector((state: RootState) => state.files);
   // Remove unused code snippets state since we're focusing on findings now
-  const { findings, loading: findingsLoading } = useSelector((state: RootState) => state.findings);
+  const { findings, loading: findingsLoading, deleteAllLoading, qaReviewLoading } = useSelector((state: RootState) => state.findings);
   // Get analysis status to detect when analysis completes
   const currentFileAnalysisStatus = useSelector((state: RootState) => 
     fileId ? state.analysis.analysisStatus[parseInt(fileId)] : undefined
@@ -81,6 +82,9 @@ const FileDetail: React.FC = () => {
     initial_coding_quality: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  // Removed local loading states - now using Redux states:
+  // const [isDeletingAll, setIsDeletingAll] = useState(false); // Track delete all operation
+  // const [qaReviewLoading, setQaReviewLoading] = useState<number | null>(null); // Track which finding is being QA reviewed
 
   useEffect(() => {
     if (fileId) {
@@ -228,7 +232,8 @@ const FileDetail: React.FC = () => {
 
     if (!confirmed) return;
 
-    setIsLoading(true);
+    // Remove local loading state since we're using Redux state
+    // setIsDeletingAll(true);
     try {
       const result = await dispatch(deleteAllFindingsByFile(parseInt(fileId))).unwrap();
       showToast(`Successfully deleted ${result.response.deletedCount} findings for ${currentFile.file_name}`, 'success');
@@ -238,7 +243,43 @@ const FileDetail: React.FC = () => {
     } catch (error: any) {
       showToast(`Failed to delete findings: ${error?.message || 'Unknown error'}`, 'error');
     } finally {
-      setIsLoading(false);
+      // Remove local loading state since we're using Redux state
+      // setIsDeletingAll(false);
+    }
+  };
+
+  const handleQAReview = async (finding: Finding) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to perform an AI QA review of this finding?\n\nThe AI will analyze the finding and may change its status if it determines it's a false positive.`
+    );
+
+    if (!confirmed) return;
+
+    // Remove local loading state since we're using Redux state
+    // setQaReviewLoading(finding.id);
+    try {
+      const result = await dispatch(performQAReview(finding.id)).unwrap();
+      
+      if (result.finding) {
+        const updatedFinding = result.finding;
+        if (updatedFinding.status === 'false_positive') {
+          showToast(`QA Review completed: Finding marked as false positive`, 'success');
+        } else {
+          showToast(`QA Review completed: Finding status updated to ${updatedFinding.status}`, 'success');
+        }
+      } else {
+        showToast('QA Review completed successfully', 'success');
+      }
+      
+      // Refresh findings to ensure UI is updated
+      if (fileId) {
+        dispatch(fetchFindingsByFile(parseInt(fileId)));
+      }
+    } catch (error: any) {
+      showToast(`QA Review failed: ${error?.message || 'Unknown error'}`, 'error');
+    } finally {
+      // Remove local loading state since we're using Redux state
+      // setQaReviewLoading(null);
     }
   };
 
@@ -613,11 +654,11 @@ const FileDetail: React.FC = () => {
               {findings.length > 0 && (
                 <button
                   onClick={handleDeleteAllFindings}
-                  disabled={isLoading}
+                  disabled={deleteAllLoading}
                   className="inline-flex items-center px-3 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <TrashIcon className="h-4 w-4 mr-1" />
-                  {isLoading ? 'Deleting...' : 'Delete All Findings'}
+                  {deleteAllLoading ? 'Deleting...' : 'Delete All Findings'}
                 </button>
               )}
             </div>
@@ -713,6 +754,18 @@ const FileDetail: React.FC = () => {
                               title="Delete Finding"
                             >
                               <TrashIcon className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={() => handleQAReview(finding)}
+                              disabled={qaReviewLoading[finding.id]}
+                              className="inline-flex items-center rounded-full p-1.5 text-purple-700 hover:bg-purple-100 dark:text-purple-300 dark:hover:bg-purple-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={qaReviewLoading[finding.id] ? "QA Review in progress..." : "AI QA Review"}
+                            >
+                              {qaReviewLoading[finding.id] ? (
+                                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-purple-500"></div>
+                              ) : (
+                                <BeakerIcon className="h-4 w-4" />
+                              )}
                             </button>
                             <button
                               onClick={() => navigate(`/findings/${finding.id}`)}

@@ -161,6 +161,7 @@ export const findingApi = {
   updateStatus: (id: number, status: string) => api.patch(`/findings/${id}`, { status }),
   delete: (id: number) => api.delete(`/findings/${id}`),
   deleteAllByFile: (fileId: number) => api.delete(`/findings/files/${fileId}/all`),
+  performQAReview: (id: number) => api.post(`/findings/${id}/qa-review`),
 };
 
 // API service for code snippets

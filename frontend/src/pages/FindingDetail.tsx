@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
 import api from '../services/api';
+import type { AppDispatch, RootState } from '../store/store';
+import { performQAReview, setCurrentFinding, clearCurrentFinding } from '../features/findingSlice';
+import { useToast } from '../context/ToastContext';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
@@ -11,6 +15,7 @@ import {
   DocumentTextIcon,
   ShieldExclamationIcon,
   ArrowTopRightOnSquareIcon,
+  BeakerIcon,
 } from '@heroicons/react/24/outline';
 
 // Helper function to determine language from filename
@@ -63,6 +68,7 @@ interface Finding {
   code_content: string;
   recommendation: string;
   md5?: string | null; // Keep top-level md5 for backward compatibility if needed
+  qa_review_reason?: string; // Add QA review reason field
   createdAt?: string;
   updatedAt?: string;
   file?: FileInfo; // Add nested file object
@@ -71,17 +77,23 @@ interface Finding {
 const FindingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [finding, setFinding] = useState<Finding | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [highlightedLines, setHighlightedLines] = useState<number[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  // Get finding and QA review loading state from Redux
+  const { currentFinding, qaReviewLoading } = useSelector((state: RootState) => state.findings);
+  const finding = currentFinding;
 
   useEffect(() => {
     const fetchFinding = async () => {
       try {
         setLoading(true);
         const response = await api.get(`/findings/${id}`);
-        setFinding(response.data);
+        dispatch(setCurrentFinding(response.data));
         
         // Find all lines with "<--- issue" for highlighting
         if (response.data.code_content) {
@@ -109,7 +121,60 @@ const FindingDetail = () => {
       }
     };
     fetchFinding();
-  }, [id]);
+    
+    // Clear current finding when component unmounts
+    return () => {
+      dispatch(clearCurrentFinding());
+    };
+  }, [id, dispatch]);
+
+  const handleQAReview = async () => {
+    if (!finding) return;
+    
+    const confirmed = window.confirm(
+      `Are you sure you want to perform an AI QA review of this finding?\n\nThe AI will analyze the finding and may change its status if it determines it's a false positive.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      await dispatch(performQAReview(finding.id)).unwrap();
+      
+      // Always fetch fresh data after QA review completion to ensure UI reflects latest state
+      const response = await api.get(`/findings/${finding.id}`);
+      const updatedFinding = response.data;
+      dispatch(setCurrentFinding(updatedFinding));
+      
+      // Update highlighted lines if code content changed
+      if (updatedFinding.code_content) {
+        const lines = updatedFinding.code_content.split('\n');
+        const issueLines: number[] = [];
+        lines.forEach((line: string, index: number) => {
+          if (line.includes('<--- issue')) {
+            issueLines.push(index + 1);
+          }
+        });
+        
+        if (issueLines.length > 0) {
+          setHighlightedLines(issueLines);
+        } else if (updatedFinding.line_number) {
+          setHighlightedLines([updatedFinding.line_number]);
+        }
+      }
+      
+      // Force component re-render to ensure UI updates
+      setRefreshKey(prev => prev + 1);
+      
+      // Show appropriate success message based on updated status
+      if (updatedFinding.status === 'false_positive') {
+        showToast(`QA Review completed: Finding marked as false positive`, 'success');
+      } else {
+        showToast(`QA Review completed: Finding status updated to ${updatedFinding.status}`, 'success');
+      }
+    } catch (error: any) {
+      showToast(`QA Review failed: ${error?.message || 'Unknown error'}`, 'error');
+    }
+  };
 
   const getSeverityIcon = (severity: string) => {
     switch (severity.toLowerCase()) {
@@ -151,6 +216,8 @@ const FindingDetail = () => {
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100';
       case 'wont_fix':
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
+      case 'false_positive':
+        return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-100';
     }
@@ -217,14 +284,28 @@ const FindingDetail = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="mb-4">
+    <div key={refreshKey} className="container mx-auto px-4 py-6">
+      <div className="mb-4 flex gap-3">
         <button 
           onClick={() => navigate(-1)} 
           className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
         >
           <ChevronLeftIcon className="h-5 w-5 mr-2" />
           Back
+        </button>
+        
+        <button
+          onClick={handleQAReview}
+          disabled={qaReviewLoading[finding?.id || 0]}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          title={qaReviewLoading[finding?.id || 0] ? "QA Review in progress..." : "AI QA Review"}
+        >
+          {qaReviewLoading[finding?.id || 0] ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-purple-200 mr-2"></div>
+          ) : (
+            <BeakerIcon className="h-4 w-4 mr-2" />
+          )}
+          {qaReviewLoading[finding?.id || 0] ? 'Analysing...' : 'AI QA Review'}
         </button>
       </div>
       
@@ -294,6 +375,13 @@ const FindingDetail = () => {
                 <div className="mt-3 p-2 bg-gray-50 dark:bg-gray-700 rounded border border-gray-200 dark:border-gray-600">
                   <p className="text-xs font-medium text-gray-600 dark:text-gray-300">Severity Reason</p>
                   <p className="text-sm text-gray-700 dark:text-gray-200">{finding.severity_reason}</p>
+                </div>
+              )}
+              
+              {finding.qa_review_reason && (
+                <div className="mt-3 p-2 bg-purple-50 dark:bg-purple-900/30 rounded border border-purple-200 dark:border-purple-800">
+                  <p className="text-xs font-medium text-purple-600 dark:text-purple-300">QA Review</p>
+                  <p className="text-sm text-purple-700 dark:text-purple-200">{finding.qa_review_reason}</p>
                 </div>
               )}
             </div>

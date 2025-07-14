@@ -5,7 +5,8 @@ import {
   TrashIcon, 
   ExclamationTriangleIcon, 
   ExclamationCircleIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  BeakerIcon
 } from '@heroicons/react/24/outline';
 import type { Finding } from '../features/findingSlice';
 
@@ -13,12 +14,14 @@ interface FindingsListProps {
   findings: Finding[];
   onEditFinding?: (finding: Finding) => void;
   onDeleteFinding?: (id: number) => void;
+  onQAReview?: (finding: Finding) => void;
 }
 
 const FindingsList: React.FC<FindingsListProps> = ({ 
   findings, 
   onEditFinding, 
-  onDeleteFinding 
+  onDeleteFinding,
+  onQAReview
 }) => {
   const getSeverityIcon = (severity: string) => {
     switch(severity) {
@@ -105,6 +108,15 @@ const FindingsList: React.FC<FindingsListProps> = ({
                       className="inline-flex items-center rounded-md border border-transparent bg-gray-200 p-1 text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       <TrashIcon className="h-4 w-4" />
+                    </button>
+                  )}
+                  {onQAReview && (
+                    <button
+                      onClick={() => onQAReview(finding)}
+                      className="inline-flex items-center rounded-md border border-transparent bg-purple-600 p-1 text-white hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                      title="AI QA Review"
+                    >
+                      <BeakerIcon className="h-4 w-4" />
                     </button>
                   )}
                   <Link

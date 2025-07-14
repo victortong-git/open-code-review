@@ -218,6 +218,8 @@ const FileScan: React.FC = () => {
         return 'text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/20';
       case 'wont_fix':
         return 'text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-900/20';
+      case 'false_positive':
+        return 'text-purple-700 bg-purple-100 dark:text-purple-300 dark:bg-purple-900/20';
       default:
         return 'text-gray-700 bg-gray-100 dark:text-gray-300 dark:bg-gray-900/20';
     }

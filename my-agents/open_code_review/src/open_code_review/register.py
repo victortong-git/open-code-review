@@ -3,3 +3,4 @@
 
 # Import any tools which need to be automatically registered here
 from open_code_review import open_code_review_function
+from open_code_review import qa_consultant_function

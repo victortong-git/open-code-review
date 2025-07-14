@@ -10,12 +10,13 @@ export interface Finding {
   description: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
   severity_reason?: string;
-  status: 'new' | 'confirmed' | 'resolved' | 'wont_fix';
+  status: 'new' | 'confirmed' | 'resolved' | 'wont_fix' | 'false_positive';
   line_number?: number;
   // code_snippet_id field removed as per new data relationship
   recommendation?: string; // Renamed from suggestion_security
   code_content?: string; // New field for extracted code content
   md5?: string; // New field for MD5 hash of source file
+  qa_review_reason?: string; // QA review reason
   createdAt: string;
   updatedAt: string;
 }
@@ -24,6 +25,8 @@ interface FindingState {
   findings: Finding[];
   currentFinding: Finding | null;
   loading: boolean;
+  deleteAllLoading: boolean;
+  qaReviewLoading: Record<number, boolean>;
   error: string | null;
 }
 
@@ -31,6 +34,8 @@ const initialState: FindingState = {
   findings: [],
   currentFinding: null,
   loading: false,
+  deleteAllLoading: false,
+  qaReviewLoading: {},
   error: null,
 };
 
@@ -188,6 +193,21 @@ export const deleteAllFindingsByFile = createAsyncThunk(
     try {
       const response = await findingApi.deleteAllByFile(fileId);
       return { fileId, response: response.data };
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return rejectWithValue(error.response?.data || error.message);
+      }
+      return rejectWithValue('An unknown error occurred');
+    }
+  }
+);
+
+export const performQAReview = createAsyncThunk(
+  'findings/performQAReview',
+  async (findingId: number, { rejectWithValue }) => {
+    try {
+      const response = await findingApi.performQAReview(findingId);
+      return response.data;
     } catch (error: unknown) {
       if (isAxiosError(error)) {
         return rejectWithValue(error.response?.data || error.message);
@@ -368,11 +388,11 @@ const findingSlice = createSlice({
       })
       // deleteAllFindingsByFile
       .addCase(deleteAllFindingsByFile.pending, (state) => {
-        state.loading = true;
+        state.deleteAllLoading = true;
         state.error = null;
       })
       .addCase(deleteAllFindingsByFile.fulfilled, (state, action) => {
-        state.loading = false;
+        state.deleteAllLoading = false;
         const { fileId } = action.payload;
         // Remove all findings for the specific file
         state.findings = state.findings.filter(finding => finding.file_id !== fileId);
@@ -382,7 +402,38 @@ const findingSlice = createSlice({
         }
       })
       .addCase(deleteAllFindingsByFile.rejected, (state, action) => {
-        state.loading = false;
+        state.deleteAllLoading = false;
+        if (typeof action.payload === 'string') {
+          state.error = action.payload;
+        } else {
+          state.error = 'An unknown error occurred';
+        }
+      })
+      // performQAReview
+      .addCase(performQAReview.pending, (state, action) => {
+        const findingId = action.meta.arg;
+        state.qaReviewLoading[findingId] = true;
+        state.error = null;
+      })
+      .addCase(performQAReview.fulfilled, (state, action) => {
+        const findingId = action.meta.arg;
+        state.qaReviewLoading[findingId] = false;
+        const qaResult = action.payload;
+        // Update the finding with QA results if finding data is included
+        if (qaResult.finding) {
+          const updatedFinding = qaResult.finding as Finding;
+          const findingIndex = state.findings.findIndex(finding => finding.id === updatedFinding.id);
+          if (findingIndex !== -1) {
+            state.findings[findingIndex] = updatedFinding;
+          }
+          if (state.currentFinding && state.currentFinding.id === updatedFinding.id) {
+            state.currentFinding = updatedFinding;
+          }
+        }
+      })
+      .addCase(performQAReview.rejected, (state, action) => {
+        const findingId = action.meta.arg;
+        state.qaReviewLoading[findingId] = false;
         if (typeof action.payload === 'string') {
           state.error = action.payload;
         } else {

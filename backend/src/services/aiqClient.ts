@@ -460,6 +460,55 @@ export class AIQClient {
     // Use the selective review method with all review types
     return this.performSelectiveReview(fileId, reviewTypes, onProgress);
   }
+
+  /**
+   * Performs QA review of an existing finding to validate its accuracy
+   * @param findingId Database ID of the finding
+   * @returns The response from the QA consultant agent
+   */
+  async performQAReview(findingId: number): Promise<any> {
+    try {
+      console.log(`Performing QA review for finding ID: ${findingId}`);
+      
+      const aiqToolkitUrl = 'http://aiqtoolkit:8000/generate';
+      const response = await axios.post(aiqToolkitUrl, {
+        input_message: JSON.stringify({
+          finding_id: findingId.toString(),
+          review_type: 'qa_consultant'
+        })
+      }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        timeout: 300000 // 5 minutes timeout
+      });
+
+      console.log('QA Review response:', response.data);
+      
+      // Parse the response if it's a string
+      if (typeof response.data === 'string') {
+        try {
+          return JSON.parse(response.data);
+        } catch (parseError) {
+          return { error: 'Failed to parse response', raw_response: response.data };
+        }
+      }
+      
+      return response.data;
+    } catch (error: any) {
+      console.error('Error performing QA review:', error.message);
+      if (error.response) {
+        console.error('QA Review Error:', error.response.status, error.response.data);
+        throw new Error(`QA review request failed with status ${error.response.status}: ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error('No response received from QA review service');
+        throw new Error('No response received from QA review service');
+      } else {
+        throw new Error(`Error setting up QA review request: ${error.message}`);
+      }
+    }
+  }
 }
 
 // Create a singleton instance

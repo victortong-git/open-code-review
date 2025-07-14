@@ -12,18 +12,19 @@ interface FindingAttributes {
   description: string;
   severity?: string; // e.g., critical, high, medium, low
   severity_reason?: string; // reason for the severity level
-  status?: string; // e.g., new, confirmed, resolved, wont_fix
+  status?: string; // e.g., new, confirmed, resolved, wont_fix, false_positive
   line_number?: number;
   recommendation?: string; // renamed from suggestion_security
   code_content?: string; // extracted code content from the file
   md5?: string; // MD5 hash of the source file
+  qa_review_reason?: string; // reason provided by QA consultant for status change
   // Timestamps
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 // Interface for Finding creation attributes
-interface FindingCreationAttributes extends Optional<FindingAttributes, 'id' | 'severity' | 'severity_reason' | 'status' | 'line_number' | 'recommendation' | 'code_content' | 'md5' | 'createdAt' | 'updatedAt'> {}
+interface FindingCreationAttributes extends Optional<FindingAttributes, 'id' | 'severity' | 'severity_reason' | 'status' | 'line_number' | 'recommendation' | 'code_content' | 'md5' | 'qa_review_reason' | 'createdAt' | 'updatedAt'> {}
 
 export class Finding extends Model<FindingAttributes, FindingCreationAttributes> implements FindingAttributes {
   public id!: number;
@@ -37,6 +38,7 @@ export class Finding extends Model<FindingAttributes, FindingCreationAttributes>
   public recommendation?: string; // Renamed from suggestion_security
   public code_content?: string; // New field for extracted code content
   public md5?: string; // New field for MD5 hash of source file
+  public qa_review_reason?: string; // New field for QA consultant reason
 
   // Timestamps
   public readonly createdAt!: Date;
@@ -105,6 +107,10 @@ export default (sequelize: Sequelize): typeof Finding => {
         allowNull: true,
       },
       md5: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      qa_review_reason: {
         type: DataTypes.TEXT,
         allowNull: true,
       },

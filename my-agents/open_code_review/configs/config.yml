@@ -1,1 +1,43 @@
-/workspace/my-agents/open_code_review/src/open_code_review/configs/config.yml
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# NeMo Agent Toolkit Configuration for OpenCodeReview
+# Based on working ollama_provider examples with code review tools
+
+functions:
+  code_execution:
+    _type: code_execution
+  current_datetime:
+    _type: current_datetime
+  open_code_review:
+    _type: open_code_review
+    llm: ollama_llm
+
+llms:
+  ollama_llm:
+    _type: ollama
+    base_url: "${LLM_BASE_URL}"
+    model: "${OLLAMA_MODEL}"
+    temperature: 0.1
+  openai_llm:
+    _type: openai
+    api_key: "${OPENAI_API_KEY}"
+    base_url: "${OPENAI_BASE_URL}"
+    model: "${OPENAI_MODEL}"
+    temperature: 0.0
+    max_tokens: 4096
+  nvidia_llm:
+    _type: openai
+    api_key: "${NVIDIA_API_KEY}"
+    base_url: "${NVIDIA_BASE_URL}"
+    model: "${NVIDIA_MODEL}"
+    temperature: 0.0
+    max_tokens: 4096
+
+workflow:
+  _type: tool_calling_agent
+  tool_names: [code_execution, current_datetime, open_code_review]
+  llm_name: "${LLM_PROVIDER}_llm"
+  verbose: true
+  handle_tool_errors: true
+  max_iterations: 15

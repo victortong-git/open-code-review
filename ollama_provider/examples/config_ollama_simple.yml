@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+
+# Simple Ollama Configuration without external dependencies
+# Uses only basic functions to avoid missing dependency issues
+
+functions:
+  current_datetime:
+    _type: current_datetime
+
+llms:
+  ollama_llm:
+    _type: ollama
+    base_url: "http://192.168.8.21:11434"
+    model: "gpt-oss:20b"
+    temperature: 0.1
+
+workflow:
+  _type: react_agent
+  tool_names: [current_datetime]
+  llm_name: ollama_llm
+  verbose: true
+  parse_agent_response_max_retries: 10

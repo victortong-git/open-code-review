@@ -1,45 +1,43 @@
-general:
-  use_uvloop: true
-  logging:
-    console:
-      _type: console
-      level: DEBUG
-    file:
-      _type: file
-      path: /tmp/open_code_review.log
-      level: DEBUG
+# SPDX-FileCopyrightText: Copyright (c) 2024-2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
 
-  front_end:
-    _type: fastapi
+# NeMo Agent Toolkit Configuration for OpenCodeReview
+# Based on working ollama_provider examples with code review tools
+
+functions:
+  code_execution:
+    _type: code_execution
+  current_datetime:
+    _type: current_datetime
+  open_code_review:
+    _type: open_code_review
+    llm: "${LLM_PROVIDER}_llm"
 
 llms:
-  openai_executor:
+  ollama_llm:
+    _type: ollama
+    base_url: "${LLM_BASE_URL}"
+    model: "${OLLAMA_MODEL}"
+    temperature: 0.1
+  openai_llm:
     _type: openai
     api_key: "${OPENAI_API_KEY}"
     base_url: "${OPENAI_BASE_URL}"
-    model_name: "${OPENAI_MODEL}"
+    model: "${OPENAI_MODEL}"
     temperature: 0.0
     max_tokens: 4096
-  nvidia_executor:
+  nvidia_llm:
     _type: openai
     api_key: "${NVIDIA_API_KEY}"
     base_url: "${NVIDIA_BASE_URL}"
-    model_name: "${NVIDIA_MODEL}"
+    model: "${NVIDIA_MODEL}"
     temperature: 0.0
     max_tokens: 4096
-  ollama_executor:
-    _type: openai
-    api_key: "${OLLAMA_API_KEY}"
-    base_url: "${OLLAMA_URL}:${OLLAMA_PORT}/v1"
-    model_name: "${OLLAMA_MODEL}"
-    temperature: 0.0
-    max_tokens: 4096
-  openai_alternative:
-    _type: openai
-    model_name: gpt-4.1-mini
-    temperature: 0.0
-    max_tokens: 16384
 
 workflow:
-  _type: open_code_review
-  llm: "${LLM_PROVIDER}_executor"
+  _type: tool_calling_agent
+  tool_names: [code_execution, current_datetime, open_code_review]
+  llm_name: "${LLM_PROVIDER}_llm"
+  verbose: true
+  handle_tool_errors: true
+  max_iterations: 15

@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import fs from 'fs/promises';
 import path from 'path';
-import aiqClient from '../services/aiqClient';
+import natClient from '../services/natClient';
 import { File } from '../models/file';
 import { CodeSnippet } from '../models/codeSnippet';
 import { Finding } from '../models/finding';
@@ -53,7 +53,7 @@ function broadcastWebSocketMessage(message: any): void {
  */
 function setupJobListeners(jobId: string, fileId: number): void {
   // Subscribe to events from the AIQ client
-  aiqClient.on('review_progress', (data: any) => {
+  natClient.on('review_progress', (data: any) => {
     if (data.fileId === fileId) {
       const jobInfo = activeJobs.get(jobId);
       if (jobInfo) {
@@ -66,7 +66,7 @@ function setupJobListeners(jobId: string, fileId: number): void {
     }
   });
 
-  aiqClient.on('review_complete', (data: any) => {
+  natClient.on('review_complete', (data: any) => {
     if (data.fileId === fileId) {
       const jobInfo = activeJobs.get(jobId);
       if (jobInfo) {
@@ -77,7 +77,7 @@ function setupJobListeners(jobId: string, fileId: number): void {
     }
   });
 
-  aiqClient.on('review_error', (data: any) => {
+  natClient.on('review_error', (data: any) => {
     if (data.fileId === fileId) {
       const jobInfo = activeJobs.get(jobId);
       if (jobInfo) {
@@ -253,7 +253,7 @@ export const analysisController = {
       }
       
       // Start analysis
-      const jobId = await aiqClient.analyzeFile(fileContent, path.basename(file.file_path), fileId);
+      const jobId = await natClient.analyzeFile(fileContent, path.basename(file.file_path), fileId);
       
       // Track the job
       activeJobs.set(jobId, {
@@ -323,7 +323,7 @@ export const analysisController = {
       // Start AI Assessment (using a different endpoint or parameter)
       console.log(`Triggering AI Assessment for file ID: ${fileId}, filename: ${path.basename(file.file_path)}`);
       try {
-        const jobId = await aiqClient.assessFile(fileContent, path.basename(file.file_path), fileId);
+        const jobId = await natClient.assessFile(fileContent, path.basename(file.file_path), fileId);
         
         // Track the job
         activeJobs.set(jobId, {
@@ -449,13 +449,13 @@ export const analysisController = {
       };
 
       // Add listeners
-      aiqClient.on('review_progress', progressHandler);
-      aiqClient.on('review_error', errorHandler);
+      natClient.on('review_progress', progressHandler);
+      natClient.on('review_error', errorHandler);
       
       // Start comprehensive review asynchronously
       (async () => {
         try {
-          const results = await aiqClient.performComprehensiveReview(fileId);
+          const results = await natClient.performComprehensiveReview(fileId);
 
           // Save the findings to the database
           await saveComprehensiveReviewFindings(jobId, results.results, fileId);
@@ -502,8 +502,8 @@ export const analysisController = {
           });
         } finally {
           // Clean up event listeners
-          aiqClient.off('review_progress', progressHandler);
-          aiqClient.off('review_error', errorHandler);
+          natClient.off('review_progress', progressHandler);
+          natClient.off('review_error', errorHandler);
         }
       })();
       
@@ -546,7 +546,7 @@ export const analysisController = {
       
       // If not tracked locally, check with AIQ Toolkit
       try {
-        const jobStatus = await aiqClient.getJobStatus(jobId);
+        const jobStatus = await natClient.getJobStatus(jobId);
         res.status(200).json(jobStatus);
       } catch (err) {
         res.status(404).json({ error: 'Job not found' });
@@ -613,7 +613,7 @@ export const analysisController = {
       
       // If not complete or not tracked locally, check with AIQ Toolkit
       try {
-        const results = await aiqClient.getResults(jobId);
+        const results = await natClient.getResults(jobId);
         res.status(200).json(results);
       } catch (err) {
         res.status(404).json({ error: 'Results not found or job still in progress' });
@@ -838,13 +838,13 @@ export const analysisController = {
       };
 
       // Add listeners
-      aiqClient.on('review_progress', progressHandler);
-      aiqClient.on('review_error', errorHandler);
+      natClient.on('review_progress', progressHandler);
+      natClient.on('review_error', errorHandler);
       
       // Start selective review asynchronously
       (async () => {
         try {
-          const results = await aiqClient.performSelectiveReview(fileId, reviewTypes);
+          const results = await natClient.performSelectiveReview(fileId, reviewTypes);
 
           // Save the findings to the database
           await saveComprehensiveReviewFindings(jobId, results.results, fileId);
@@ -892,8 +892,8 @@ export const analysisController = {
           });
         } finally {
           // Clean up event listeners
-          aiqClient.off('review_progress', progressHandler);
-          aiqClient.off('review_error', errorHandler);
+          natClient.off('review_progress', progressHandler);
+          natClient.off('review_error', errorHandler);
         }
       })();
       
@@ -931,7 +931,7 @@ export const analysisController = {
       const jobId = uuidv4();
       
       // Call the AI code analysis service
-      const aiResponse = await aiqClient.callAICodeAnalysis(fileId, 'general_review');
+      const aiResponse = await natClient.callAICodeAnalysis(fileId, 'general_review');
       
       // Track the job as completed
       activeJobs.set(jobId, {
@@ -972,7 +972,7 @@ export function setupWebSocketHandlers(wss: any): void {
   wsServer = wss;
   
   // Subscribe to events from the AIQ client to broadcast updates
-  aiqClient.on('analysis_progress', (data: any) => {
+  natClient.on('analysis_progress', (data: any) => {
     // Broadcast progress updates to all connected clients
     wss.clients.forEach((client: any) => {
       if (client.readyState === 1) { // WebSocket.OPEN
@@ -984,7 +984,7 @@ export function setupWebSocketHandlers(wss: any): void {
     });
   });
 
-  aiqClient.on('new_finding', (data: any) => {
+  natClient.on('new_finding', (data: any) => {
     // Broadcast new findings to all connected clients
     wss.clients.forEach((client: any) => {
       if (client.readyState === 1) { // WebSocket.OPEN
@@ -996,7 +996,7 @@ export function setupWebSocketHandlers(wss: any): void {
     });
   });
 
-  aiqClient.on('analysis_complete', (data: any) => {
+  natClient.on('analysis_complete', (data: any) => {
     // Broadcast completion updates to all connected clients
     wss.clients.forEach((client: any) => {
       if (client.readyState === 1) { // WebSocket.OPEN
@@ -1008,7 +1008,7 @@ export function setupWebSocketHandlers(wss: any): void {
     });
   });
 
-  aiqClient.on('review_progress', (data: any) => {
+  natClient.on('review_progress', (data: any) => {
     // Broadcast review progress updates to all connected clients
     wss.clients.forEach((client: any) => {
       if (client.readyState === 1) { // WebSocket.OPEN
@@ -1020,7 +1020,7 @@ export function setupWebSocketHandlers(wss: any): void {
     });
   });
 
-  aiqClient.on('review_complete', (data: any) => {
+  natClient.on('review_complete', (data: any) => {
     // Broadcast review completion to all connected clients
     wss.clients.forEach((client: any) => {
       if (client.readyState === 1) { // WebSocket.OPEN
@@ -1032,7 +1032,7 @@ export function setupWebSocketHandlers(wss: any): void {
     });
   });
 
-  aiqClient.on('review_error', (data: any) => {
+  natClient.on('review_error', (data: any) => {
     // Broadcast review errors to all connected clients
     wss.clients.forEach((client: any) => {
       if (client.readyState === 1) { // WebSocket.OPEN

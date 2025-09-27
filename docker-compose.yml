@@ -49,7 +49,7 @@ services:
     environment:
       VITE_API_URL: http://localhost:8001/api
 
-  aiqtoolkit-ui:
+  nemo-agent-toolkit-ui:
     build:
       context: .
       dockerfile: ./aiqtoolkit-ui/Dockerfile
@@ -61,21 +61,21 @@ services:
       NODE_ENV: production
       HOSTNAME: "0.0.0.0"
       PORT: 3000
-      NEXT_PUBLIC_HTTP_CHAT_COMPLETION_URL: "http://aiqtoolkit:8000/chat/stream"
-      NEXT_PUBLIC_WEBSOCKET_CHAT_COMPLETION_URL: "ws://aiqtoolkit:8000/websocket"
+      NEXT_PUBLIC_HTTP_CHAT_COMPLETION_URL: "http://nvidia-nat:8000/chat/stream"
+      NEXT_PUBLIC_WEBSOCKET_CHAT_COMPLETION_URL: "ws://nvidia-nat:8000/websocket"
       NEXT_PUBLIC_WEB_SOCKET_DEFAULT_ON: "true"
       NEXT_PUBLIC_ENABLE_INTERMEDIATE_STEPS: "true"
 
 
-  aiqtoolkit:
+  nvidia-nat:
     build:
-      context: ./aiqtoolkit
-      dockerfile: .tmp/Dockerfile
+      context: .
+      dockerfile: ./Dockerfile-nemo_agent_toolkit
     volumes:
-      - ./aiqtoolkit:/workspace
       - ./logs:/workspace/logs
       - ./projects:/workspace/.tmp/projects
       - ./my-agents:/workspace/my-agents
+      - ./ollama_provider:/workspace/ollama_provider
     working_dir: /workspace
     environment:
       - PYTHONDONTWRITEBYTECODE=1
@@ -94,11 +94,15 @@ services:
       - OLLAMA_API_KEY=${OLLAMA_API_KEY}
       - LLM_MAX_TOKENS=${LLM_MAX_TOKENS}
       - LLM_TEMPERATURE=${LLM_TEMPERATURE}
+      - LLM_BASE_URL=${LLM_BASE_URL}
+      - OLLAMA_HOST=localhost
     ports:
       - "8000:8000"
-    command: ["bash", "-c", "cd /workspace && source .venv/bin/activate && aiq serve --config_file=my-agents/open_code_review/configs/config.yml --port 8000 --host 0.0.0.0"]
+    command: ["bash", "-c", "cd /workspace && source .venv/bin/activate && nat serve --config_file=my-agents/open_code_review/src/open_code_review/configs/config.yml --port 8000 --host 0.0.0.0"]
     networks:
       - reviewnet
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     tty: true
     stdin_open: true
 

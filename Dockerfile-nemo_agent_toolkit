@@ -1,0 +1,87 @@
+# SPDX-FileCopyrightText: Copyright (c) 2025, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+ARG BASE_IMAGE_URL=ubuntu
+ARG BASE_IMAGE_TAG=22.04
+ARG PYTHON_VERSION=3.12
+ARG NAT_VERSION=1.0.0
+ARG UV_VERSION=0.8.3
+
+FROM --platform=$TARGETPLATFORM ghcr.io/astral-sh/uv:${UV_VERSION} AS uv_base
+
+FROM --platform=$TARGETPLATFORM ${BASE_IMAGE_URL}:${BASE_IMAGE_TAG} AS base
+ARG NAT_VERSION
+ARG PYTHON_VERSION
+ARG UV_VERSION
+
+COPY --from=uv_base /uv /uvx /bin/
+
+ENV PYTHONDONTWRITEBYTECODE=1
+
+# Install certificates, Git, Git LFS, and build tools
+RUN export DEBIAN_FRONTEND=noninteractive && \
+    export TZ=Etc/UTC && \
+    apt-get update && \
+    apt upgrade -y && \
+    apt-get install --no-install-recommends -y \
+        ca-certificates \
+        git \
+        git-lfs \
+        build-essential \
+        gcc \
+        g++ \
+        make \
+        python3-dev && \
+    git lfs install && \
+    apt clean && \
+    update-ca-certificates
+
+# Set SSL environment variables
+ENV REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+ENV SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
+
+# Set working directory
+WORKDIR /workspace
+
+# Create virtual environment and install nvidia-nat
+RUN --mount=type=cache,id=uv_cache,target=/root/.cache/uv,sharing=locked \
+    uv venv --python ${PYTHON_VERSION} /workspace/.venv && \
+    uv pip install "nvidia-nat[all]"
+
+# Environment variables for the venv
+ENV PATH="/workspace/.venv/bin:$PATH"
+
+# Copy and install ollama provider dependencies
+COPY ollama_provider/requirements.txt /workspace/ollama_provider/requirements.txt
+RUN --mount=type=cache,id=uv_cache,target=/root/.cache/uv,sharing=locked \
+    uv pip install -r /workspace/ollama_provider/requirements.txt
+
+# Copy ollama provider files
+COPY ollama_provider/ /workspace/ollama_provider/
+
+# Copy my-agents directory
+COPY my-agents/ /workspace/my-agents/
+
+# Install ollama provider (run setup script)
+RUN cd /workspace/ollama_provider && \
+    chmod +x setup.sh && \
+    ./setup.sh --no-test
+
+# Install my-agents/open_code_review as editable package
+RUN cd /workspace/my-agents/open_code_review && \
+    uv pip install -e .
+
+# Default command to start NAT server
+CMD ["nat", "serve", "--config_file", "my-agents/open_code_review/configs/config.yml", "--host", "0.0.0.0", "--port", "8000"]

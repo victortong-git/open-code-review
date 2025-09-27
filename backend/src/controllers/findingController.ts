@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { db } from '../models';
 import { Op } from 'sequelize';
-import aiqClient from '../services/aiqClient';
+import natClient from '../services/natClient';
 
 // Get all findings
 export const getAllFindings = async (req: Request, res: Response, next: NextFunction) => {
@@ -502,7 +502,7 @@ export const performQAReview = async (req: Request, res: Response, next: NextFun
 
     try {
       // Call the QA review agent
-      const qaResult = await aiqClient.performQAReview(id);
+      const qaResult = await natClient.performQAReview(id);
       console.log('QA Review completed, result:', qaResult);
 
       // Process the QA result and update the finding if needed

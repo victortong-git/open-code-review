@@ -4,14 +4,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-OpenCodeReview is an AI-powered source code review tool and vulnerability management system that uses NVIDIA NeMo Agent Toolkit as its core AI engine. The application consists of multiple containerized services including a React frontend, Node.js backend, PostgreSQL database with PgVector support, and AI processing components.
+OpenCodeReview is an AI-powered source code review tool and vulnerability management system that uses NVIDIA NeMo Agent Toolkit (NAT) as its core AI engine. The application consists of multiple containerized services including a React frontend, Node.js backend, PostgreSQL database with PgVector support, and AI processing components with local Ollama support.
 
 ## Architecture
 
 - **Frontend**: React 19 with TypeScript, Redux Toolkit, Vite, and Tailwind CSS
 - **Backend**: Node.js with Express, TypeScript, Sequelize ORM
 - **Database**: PostgreSQL with PgVector extension
-- **AI Engine**: NVIDIA NeMo Agent Toolkit (Python FastAPI)
+- **AI Engine**: NVIDIA NeMo Agent Toolkit (NAT) with local Ollama support
 - **MCP Server**: Python-based Model Context Protocol server
 - **Deployment**: Docker Compose with isolated containers
 
@@ -39,11 +39,11 @@ npm run preview      # Preview production build
 
 ### Docker Operations
 ```bash
-./start_open-code-review.sh    # Start all services
-./stop_open-code-review.sh     # Stop all services
-./run_migrations.sh            # Initialize database
-./restart.sh                   # Restart application
-./00-setup_aiqtoolkit.sh      # Setup NeMo Agent Toolkit
+./start_open-code-review.sh          # Start all services
+./stop_open-code-review.sh           # Stop all services
+./run_migrations.sh                  # Initialize database
+./restart.sh                         # Restart application
+./00-setup_nemo_agent_toolkit.sh     # Setup NeMo Agent Toolkit with Ollama support
 ```
 
 ### Testing
@@ -70,9 +70,10 @@ npm run preview      # Preview production build
 - `src/utils/` - Utility functions for dates, exports, etc.
 
 ### AI Components
-- `aiqtoolkit/` - NVIDIA NeMo Agent Toolkit integration
+- `ollama_provider/` - Ollama provider integration for local LLM support
 - `mcp_server/` - Model Context Protocol server for AI interactions
 - `my-agents/open_code_review/` - Custom code review agent configuration
+- `Dockerfile-nemo_agent_toolkit` - NeMo Agent Toolkit container configuration
 
 ## Database
 
@@ -98,13 +99,13 @@ WebSocket connections are used for real-time analysis updates.
 ## Development Workflow
 
 1. Ensure Docker and Docker Compose are installed
-2. Set up environment variables (NVIDIA_API_KEY, OPENAI_API_KEY)
-3. Run `./00-setup_aiqtoolkit.sh` to prepare the AI toolkit
+2. Set up environment variables (NVIDIA_API_KEY, OPENAI_API_KEY, Ollama configuration)
+3. Run `./00-setup_nemo_agent_toolkit.sh` to prepare the NeMo Agent Toolkit
 4. Start services with `./start_open-code-review.sh`
 5. Initialize database with `./run_migrations.sh`
 6. Access frontend at `http://localhost:5174`
 7. Backend API available at `http://localhost:8001`
-8. AI toolkit UI at `http://localhost:3000`
+8. NeMo Agent Toolkit UI at `http://localhost:3000`
 
 ## LLM Configuration
 
@@ -156,9 +157,12 @@ To switch between providers, simply change the `LLM_PROVIDER` value and ensure t
 
 ## Important Notes
 
-- The application can use either remote API services (OpenAI, NVIDIA) or local LLM infrastructure (Ollama)
+- The application uses NVIDIA NeMo Agent Toolkit (NAT) as its core AI engine
+- Supports multiple LLM providers: OpenAI, NVIDIA, and local Ollama infrastructure
 - AI analysis is computationally intensive and may take 5-10 minutes per file
 - Rate limiting is configured for API endpoints
 - The system uses WebSockets for real-time analysis status updates
 - All components run in isolated Docker containers with shared networks
 - Local Ollama setup requires the model to be available on the specified host and port
+- The `nvidia-nat` service replaces the previous `aiqtoolkit` service
+- Migration from AIQ Toolkit to NeMo Agent Toolkit provides enhanced performance and local LLM support

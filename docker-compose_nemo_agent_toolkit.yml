@@ -1,0 +1,28 @@
+services:
+  nvidia-nat:
+    build:
+      context: .
+      dockerfile: ./Dockerfile-nemo_agent_toolkit
+    volumes:
+      - ./logs:/workspace/logs
+      - ./my-agents:/workspace/my-agents
+      - ./ollama_provider:/workspace/ollama_provider
+    working_dir: /workspace
+    environment:
+      - NVIDIA_API_KEY=${NVIDIA_API_KEY:-}
+      - PYTHONDONTWRITEBYTECODE=1
+      - PATH=/workspace/.venv/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin
+      - PYTHONPATH=/workspace:/workspace/src
+      - OLLAMA_HOST=localhost
+      - OLLAMA_PORT=11434
+      - OLLAMA_URL=http://localhost:11434
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - reviewnet
+    tty: true
+    stdin_open: true
+
+networks:
+  reviewnet:
+    driver: bridge

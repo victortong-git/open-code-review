@@ -2,6 +2,7 @@ pyproject.toml
 src/open_code_review/__init__.py
 src/open_code_review/helper_tools.py
 src/open_code_review/open_code_review_function.py
+src/open_code_review/qa_consultant_function.py
 src/open_code_review/register.py
 src/open_code_review/utils.py
 src/open_code_review.egg-info/PKG-INFO

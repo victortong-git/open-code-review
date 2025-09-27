@@ -1,0 +1,11 @@
+# Patch for /workspace/src/aiq/llm/register.py
+# This adds the Ollama provider import to the register file
+
+--- a/src/aiq/llm/register.py
++++ b/src/aiq/llm/register.py
+@@ -20,5 +20,6 @@
+ # Import any providers which need to be automatically registered here
+ from . import aws_bedrock_llm
+ from . import nim_llm
++from . import ollama_llm
+ from . import openai_llm

@@ -15,6 +15,10 @@ interface Config {
     baseUrl: string;
     timeout: number;
   };
+  nemoAgentToolkit: {
+    baseUrl: string;
+    timeout: number;
+  };
   websocket: {
     path: string;
     pingInterval: number;
@@ -44,6 +48,10 @@ const config: Config = {
   aiqToolkit: {
     baseUrl: process.env.AIQ_TOOLKIT_URL || 'http://aiqtoolkit:8000',
     timeout: parseInt(process.env.AIQ_TOOLKIT_TIMEOUT || '30000', 10),
+  },
+  nemoAgentToolkit: {
+    baseUrl: process.env.NEMO_AGENT_TOOLKIT_URL || 'http://nvidia-nat:8000',
+    timeout: parseInt(process.env.NEMO_AGENT_TOOLKIT_TIMEOUT || '300000', 10),
   },
   websocket: {
     path: '/ws',

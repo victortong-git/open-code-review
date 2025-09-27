@@ -14,6 +14,8 @@ router.put('/:id', findingController.updateFinding);
 router.delete('/:id', findingController.deleteFinding);
 // QA Review endpoint
 router.post('/:id/qa-review', findingController.performQAReview);
+// Route for getting findings by file ID
+router.get('/files/:id', findingController.getFindingsByFileId);
 // Route for getting findings by project ID
 router.get('/projects/:id', findingController.getFindingsByProjectId);
 // Route for deleting all findings by file ID
